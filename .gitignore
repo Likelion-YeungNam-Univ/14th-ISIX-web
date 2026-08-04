@@ -9,6 +9,7 @@ node_modules/
 .pnp.js
 
 # 빌드
+*.tsbuildinfo
 dist/
 dist-ssr/
 build/
