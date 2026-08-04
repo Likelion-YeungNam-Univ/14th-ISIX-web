@@ -1,0 +1,99 @@
+<svg width="1200" height="400" viewBox="0 0 1200 400"
+     xmlns="http://www.w3.org/2000/svg"
+     role="img" aria-label="CLOSR banner">
+  <title>CLOSR — 가장 완벽한 명품을 가장 가까이, 내 몸 위의 3D 가상 아틀리에</title>
+  <defs>
+
+    <!-- Background radial gradient: white → warm ivory -->
+    <radialGradient id="bg" cx="50%" cy="42%" r="65%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f7f2e8"/>
+    </radialGradient>
+
+    <!-- Sweeping shimmer for CLOSR text (darker golds for white bg) -->
+    <linearGradient id="shimmer" gradientUnits="userSpaceOnUse"
+                    x1="-800" y1="0" x2="0" y2="0">
+      <stop offset="0%"   stop-color="#8a6d3b"/>
+      <stop offset="38%"  stop-color="#b8934e"/>
+      <stop offset="50%"  stop-color="#dcbf7e"/>
+      <stop offset="62%"  stop-color="#b8934e"/>
+      <stop offset="100%" stop-color="#8a6d3b"/>
+      <animate attributeName="x1" from="-800" to="1200" dur="3.5s" repeatCount="indefinite"/>
+      <animate attributeName="x2" from="0"    to="2000" dur="3.5s" repeatCount="indefinite"/>
+    </linearGradient>
+
+    <!-- Soft glow behind title text -->
+    <filter id="glow" x="-15%" y="-40%" width="130%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+  </defs>
+
+  <!-- ── Background ───────────────────────────────────────── -->
+  <rect width="1200" height="400" fill="url(#bg)"/>
+
+  <!-- ── Ambient pulse behind title ───────────────────────── -->
+  <ellipse cx="600" cy="215" rx="380" ry="95" fill="#c9a96a" opacity="0">
+    <animate attributeName="opacity" values="0;0.10;0" dur="4s" repeatCount="indefinite"/>
+  </ellipse>
+
+  <!-- ── Wave layers (back → front, light champagne tones) ── -->
+
+  <!-- Back wave -->
+  <path fill="#efe6d2">
+    <animate attributeName="d"
+      values="
+        M0,296 C120,278 280,312 460,296 C640,280 820,316 1000,298 C1100,291 1160,290 1200,294 L1200,400 L0,400 Z;
+        M0,303 C140,288 308,318 488,302 C668,286 852,322 1022,304 C1096,297 1152,294 1200,299 L1200,400 L0,400 Z;
+        M0,296 C120,278 280,312 460,296 C640,280 820,316 1000,298 C1100,291 1160,290 1200,294 L1200,400 L0,400 Z"
+      dur="9s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
+      keyTimes="0;0.5;1"/>
+  </path>
+
+  <!-- Mid wave -->
+  <path fill="#e3d3ae">
+    <animate attributeName="d"
+      values="
+        M0,328 C180,312 380,346 580,328 C780,310 980,348 1200,328 L1200,400 L0,400 Z;
+        M0,322 C200,336 400,314 600,328 C800,342 1000,318 1200,325 L1200,400 L0,400 Z;
+        M0,328 C180,312 380,346 580,328 C780,310 980,348 1200,328 L1200,400 L0,400 Z"
+      dur="7s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
+      keyTimes="0;0.5;1"/>
+  </path>
+
+  <!-- Front wave -->
+  <path fill="#d3bc85">
+    <animate attributeName="d"
+      values="
+        M0,358 C160,344 360,368 560,355 C760,342 960,368 1200,358 L1200,400 L0,400 Z;
+        M0,350 C180,362 380,342 580,352 C780,362 980,344 1200,352 L1200,400 L0,400 Z;
+        M0,358 C160,344 360,368 560,355 C760,342 960,368 1200,358 L1200,400 L0,400 Z"
+      dur="6s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
+      keyTimes="0;0.5;1"/>
+  </path>
+
+  <!-- ── CLOSR title ────────────────────────────────────────── -->
+  <text x="600" y="234"
+        text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="126" font-weight="bold" letter-spacing="20"
+        fill="url(#shimmer)" filter="url(#glow)">CLOSR</text>
+
+  <!-- ── Korean subtitle ───────────────────────────────────── -->
+  <text x="600" y="286"
+        text-anchor="middle"
+        font-family="'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif"
+        font-size="17" letter-spacing="4.5" fill="#8a6d3b">
+    가장 완벽한 명품을 가장 가까이, 내 몸 위의 3D 가상 아틀리에
+    <animate attributeName="opacity" values="0.65;0.95;0.65"
+             dur="5s" repeatCount="indefinite"/>
+  </text>
+
+</svg>

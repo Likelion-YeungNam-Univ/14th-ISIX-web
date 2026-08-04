@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* 브랜드 */
+  --color-bg: #0D0D0F;
+  --color-card: #17171B;
+  --color-border: #2A2A30;
+  --color-text: #F2EFE9;
+  --color-text-sub: #8C8880;
+  --color-gold: #C9A96A;
+
+  /* 히트맵 — 임의로 바꾸지 않습니다 */
+  --fit-loose: #2E86C1;
+  --fit-good: #27AE60;
+  --fit-snug: #D68910;
+  --fit-tight: #C0392B;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
