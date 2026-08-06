@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createAvatar } from '../../api/avatar';
 
 import BodyInfoForm, {
   type BodyInfo,
@@ -15,6 +16,9 @@ const Upload = () => {
     weight: '',
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+
   const height = Number(bodyInfo.height);
   const weight = Number(bodyInfo.weight);
 
@@ -26,20 +30,38 @@ const Upload = () => {
 
   const isFormValid = photo !== null && isHeightValid && isWeightValid;
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!isFormValid) {
+    if (!isFormValid || !photo || isSubmitting) {
       return;
     }
 
-    navigate('/processing', {
-      state: {
-        jobId: 'mock-job-0001',
-        height,
-        weight,
-      },
-    });
+    setIsSubmitting(true);
+    setSubmitError('');
+
+    try {
+      const { jobId } = await createAvatar(
+        photo,
+        Number(bodyInfo.height),
+        Number(bodyInfo.weight),
+      );
+
+      navigate('/processing', {
+        state: {
+          jobId,
+          height: Number(bodyInfo.height),
+          weight: Number(bodyInfo.weight),
+        },
+      });
+    } catch (error) {
+      console.error('아바타 생성 요청 실패:', error);
+      setSubmitError(
+        '아바타 생성 요청에 실패했습니다. 서버 연결 상태를 확인한 뒤 다시 시도해 주세요.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -74,12 +96,18 @@ const Upload = () => {
             onBodyInfoChange={setBodyInfo}
           />
 
+          {submitError && (
+            <p className="mt-4 text-sm text-red-400">
+              {submitError}
+            </p>
+          )}
+
           <button
             type="submit"
-            disabled={!isFormValid}
+            disabled={!isFormValid || isSubmitting}
             className="w-full rounded-xl bg-gold px-5 py-4 font-semibold text-bg transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
           >
-            아바타 생성하기
+            {isSubmitting ? '요청 중...' : '아바타 생성하기'}
           </button>
 
           {!isFormValid && (

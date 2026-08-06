@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { getAvatarJob } from '../../api/avatar';
+
 interface ProcessingPageState {
   jobId: string;
   height: number;
   weight: number;
 }
+
+const POLLING_INTERVAL = 2000;
 
 const Processing = () => {
   const location = useLocation();
@@ -13,89 +17,198 @@ const Processing = () => {
 
   const pageState = location.state as ProcessingPageState | null;
 
-  const [progress, setProgress] = useState(0);
+  const jobId = pageState?.jobId;
+  const height = pageState?.height;
+  const weight = pageState?.weight;
+
+  const [progress, setProgress] = useState<number | null>(null);
+  const [statusMessage, setStatusMessage] = useState(
+    '아바타 생성 상태를 확인하고 있습니다.',
+  );
+  const [errorMessage, setErrorMessage] = useState('');
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    if (!pageState?.jobId) {
+    if (!jobId) {
       navigate('/upload', { replace: true });
       return;
     }
 
-    const progressTimer = window.setInterval(() => {
-      setProgress((currentProgress) => {
-        return Math.min(currentProgress + 10, 100);
-      });
-    }, 300);
+    let isCancelled = false;
+    let pollTimer: number | undefined;
 
-    const completeTimer = window.setTimeout(() => {
-      navigate('/fitting', {
-        replace: true,
-        state: {
-          jobId: pageState.jobId,
-          avatarId: 1,
-          height: pageState.height,
-          weight: pageState.weight,
-        },
-      });
-    }, 3300);
+    const pollAvatarJob = async () => {
+      try {
+        const job = await getAvatarJob(jobId);
+
+        if (isCancelled) {
+          return;
+        }
+
+        if (typeof job.progress === 'number') {
+          const safeProgress = Math.min(
+            Math.max(job.progress, 0),
+            100,
+          );
+
+          setProgress(safeProgress);
+        }
+
+        if (job.step) {
+          setStatusMessage(job.step);
+        }
+
+        if (job.status === 'processing') {
+          if (!job.step) {
+            setStatusMessage('3D 아바타를 생성하고 있습니다.');
+          }
+
+          pollTimer = window.setTimeout(
+            pollAvatarJob,
+            POLLING_INTERVAL,
+          );
+
+          return;
+        }
+
+        if (job.status === 'done') {
+          if (!job.avatarId) {
+            setErrorMessage(
+              '아바타 생성은 완료됐지만 아바타 정보를 받지 못했습니다.',
+            );
+
+            return;
+          }
+
+          setProgress(100);
+          setStatusMessage('아바타 생성이 완료되었습니다.');
+
+          navigate('/fitting', {
+            replace: true,
+            state: {
+              jobId,
+              avatarId: job.avatarId,
+              height,
+              weight,
+            },
+          });
+
+          return;
+        }
+
+        if (job.status === 'failed') {
+          const errorCode = job.errorCode
+            ? ` (${job.errorCode})`
+            : '';
+
+          setErrorMessage(
+            `아바타 생성에 실패했습니다${errorCode}`,
+          );
+        }
+      } catch (error) {
+        console.error('아바타 생성 상태 조회 실패:', error);
+
+        if (!isCancelled) {
+          setErrorMessage(
+            '아바타 생성 상태를 확인하지 못했습니다. 서버 연결 상태를 확인한 뒤 다시 시도해 주세요.',
+          );
+        }
+      }
+    };
+
+    setErrorMessage('');
+    void pollAvatarJob();
 
     return () => {
-      window.clearInterval(progressTimer);
-      window.clearTimeout(completeTimer);
+      isCancelled = true;
+
+      if (pollTimer !== undefined) {
+        window.clearTimeout(pollTimer);
+      }
     };
-  }, [navigate, pageState]);
+  }, [jobId, height, weight, navigate, retryCount]);
 
-  const getStatusMessage = () => {
-    if (progress < 30) {
-      return '사진을 확인하고 있습니다.';
-    }
-
-    if (progress < 70) {
-      return '신체 정보를 분석하고 있습니다.';
-    }
-
-    if (progress < 100) {
-      return '3D 아바타를 생성하고 있습니다.';
-    }
-
-    return '아바타 생성이 완료되었습니다.';
+  const handleRetry = () => {
+    setProgress(null);
+    setErrorMessage('');
+    setStatusMessage('아바타 생성 상태를 다시 확인하고 있습니다.');
+    setRetryCount((currentCount) => currentCount + 1);
   };
 
-  if (!pageState?.jobId) {
+  if (!jobId) {
     return null;
   }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-bg px-5">
       <section className="w-full max-w-xl rounded-2xl border border-border bg-card p-8 text-center">
-        <p className="text-sm font-semibold text-gold">STEP 2</p>
+        <p className="text-sm font-semibold text-gold">
+          STEP 2
+        </p>
 
         <h1 className="mt-3 text-3xl font-semibold text-text">
           아바타를 생성하고 있습니다
         </h1>
 
         <p className="mt-4 text-text-sub">
-          입력한 사진과 신체 정보를 바탕으로 3D 아바타를 생성합니다.
+          입력한 사진과 신체 정보를 바탕으로 3D 아바타를
+          생성합니다.
         </p>
 
         <div className="mt-10">
           <div className="h-3 overflow-hidden rounded-full bg-bg">
             <div
-              className="h-full rounded-full bg-gold transition-all duration-300"
-              style={{ width: `${progress}%` }}
+              className={
+                progress === null
+                  ? 'h-full w-1/3 animate-pulse rounded-full bg-gold'
+                  : 'h-full rounded-full bg-gold transition-all duration-300'
+              }
+              style={
+                progress === null
+                  ? undefined
+                  : { width: `${progress}%` }
+              }
             />
           </div>
 
           <div className="mt-4 flex items-center justify-between gap-4 text-sm">
             <span className="text-left text-text-sub">
-              {getStatusMessage()}
+              {statusMessage}
             </span>
 
             <span className="font-semibold text-text">
-              {progress}%
+              {progress === null ? '처리 중' : `${progress}%`}
             </span>
           </div>
         </div>
+
+        {errorMessage && (
+          <div className="mt-8">
+            <p className="text-sm leading-6 text-red-400">
+              {errorMessage}
+            </p>
+
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={handleRetry}
+                className="w-full rounded-xl bg-gold px-5 py-3 font-semibold text-bg"
+              >
+                다시 시도
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  navigate('/upload', { replace: true })
+                }
+                className="w-full rounded-xl border border-border px-5 py-3 font-semibold text-text"
+              >
+                입력 화면으로 돌아가기
+              </button>
+            </div>
+          </div>
+        )}
       </section>
     </main>
   );
