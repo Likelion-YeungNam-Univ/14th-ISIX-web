@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createAvatar } from '../../api/avatar';
+import { ensureGuestSession } from '@/api/session';
 
 import BodyInfoForm, {
   type BodyInfo,
@@ -41,6 +42,8 @@ const Upload = () => {
     setSubmitError('');
 
     try {
+      await ensureGuestSession();
+
       const { jobId } = await createAvatar(
         photo,
         Number(bodyInfo.height),
