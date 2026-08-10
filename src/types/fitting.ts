@@ -1,27 +1,28 @@
-export type Verdict = 'loose' | 'good' | 'snug' | 'tight';
-export type Overall = 'fit' | 'snug' | 'unfit';
+import type { GarmentSize } from '@/types/garment';
 
-export interface FitItem {
+export interface FitPart {
   part: string;
-  label: string;
-  /** 여유량 (cm). 음수면 낌 */
-  ease: number;
-  verdict: Verdict;
+  actualEase: number;
+  refEase: number;
+  deviation: number;
+  verdict: string;
   color: string;
 }
 
-export interface FittingResponse {
-  glbUrl: string;
-  fitReport: FitItem[];
-  overall: Overall;
-  recommendedSize: string;
-  message: string;
+export interface FittingSizeDetail {
+  modelUrl: string | null;
+  parts: FitPart[];
+  penalty: number;
+  totalDev: number;
+  wearable: boolean;
+  recommended: boolean;
 }
 
-export interface Garment {
-  garmentId: string;
-  name: string;
-  category: 'top' | 'bottom' | 'outer' | 'dress';
-  thumbnailUrl: string;
-  sizes: string[];
+export type FittingSizes = Record<GarmentSize, FittingSizeDetail>;
+
+export interface FittingResult {
+  garmentId: number;
+  sizes: FittingSizes;
+  recommendedSize: GarmentSize;
+  recommendationReason: string;
 }
