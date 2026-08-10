@@ -7,3 +7,9 @@ export interface AvatarJob {
   glbUrl: string | null;
   measurements: Record<string, number> | null;
 }
+
+export interface AvatarResponse {
+  avatarId: number;
+  glbUrl: string;
+  measurements: Record<string, number>;
+}
