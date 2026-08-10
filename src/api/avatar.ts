@@ -14,13 +14,19 @@ export const createAvatar = async (
 ): Promise<{ jobId: string }> => {
   const form = new FormData();
   form.append('photo', photo);
-  form.append('height', String(height));
-  form.append('weight', String(weight));
 
   const { data } = await apiClient.post<ApiResponse<{ jobId: string }>>(
     '/api/v1/avatars',
     form,
-    { headers: { 'Content-Type': 'multipart/form-data' } },
+    {
+      params: {
+        height,
+        weight,
+      },
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    },
   );
   return data.data!;
 };
@@ -31,7 +37,7 @@ export const getAvatarJob = async (jobId: string): Promise<AvatarJob> => {
   return data.data!;
 };
 
-export const getAvatar = async (avatarId: string): Promise<AvatarResponse> => {
+export const getAvatar = async (avatarId: number): Promise<AvatarResponse> => {
   const { data } = await apiClient.get<ApiResponse<AvatarResponse>>(
     `/api/v1/avatars/detail/${avatarId}`,
   );

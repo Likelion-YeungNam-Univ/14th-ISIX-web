@@ -15,6 +15,6 @@ export interface AvatarJob {
   status: 'processing' | 'done' | 'failed';
   progress?: number;
   step?: string;
-  avatarId?: string;
+  avatarId?: number;
   errorCode?: string;
 }
