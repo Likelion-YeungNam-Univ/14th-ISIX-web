@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { getAvatarJob } from '../../api/avatar';
+import { getAvatarJob } from '@/api/avatar';
 
 interface ProcessingPageState {
   jobId: string;
@@ -45,23 +45,9 @@ const Processing = () => {
           return;
         }
 
-        if (typeof job.progress === 'number') {
-          const safeProgress = Math.min(
-            Math.max(job.progress, 0),
-            100,
-          );
-
-          setProgress(safeProgress);
-        }
-
-        if (job.step) {
-          setStatusMessage(job.step);
-        }
-
         if (job.status === 'processing') {
-          if (!job.step) {
-            setStatusMessage('3D 아바타를 생성하고 있습니다.');
-          }
+          setProgress(null);
+          setStatusMessage('3D 아바타를 생성하고 있습니다.');
 
           pollTimer = window.setTimeout(
             pollAvatarJob,
@@ -72,11 +58,10 @@ const Processing = () => {
         }
 
         if (job.status === 'done') {
-          if (!job.avatarId) {
+          if (job.avatarId == null) {
             setErrorMessage(
               '아바타 생성은 완료됐지만 아바타 정보를 받지 못했습니다.',
             );
-
             return;
           }
 
@@ -86,8 +71,10 @@ const Processing = () => {
           navigate('/fitting', {
             replace: true,
             state: {
-              jobId,
+              jobId: job.jobId,
               avatarId: job.avatarId,
+              glbUrl: job.glbUrl,
+              measurements: job.measurements,
               height,
               weight,
             },
@@ -97,12 +84,8 @@ const Processing = () => {
         }
 
         if (job.status === 'failed') {
-          const errorCode = job.errorCode
-            ? ` (${job.errorCode})`
-            : '';
-
           setErrorMessage(
-            `아바타 생성에 실패했습니다${errorCode}`,
+            '아바타 생성에 실패했습니다. 사진과 입력 정보를 확인한 뒤 다시 시도해 주세요.',
           );
         }
       } catch (error) {
@@ -151,8 +134,7 @@ const Processing = () => {
         </h1>
 
         <p className="mt-4 text-text-sub">
-          입력한 사진과 신체 정보를 바탕으로 3D 아바타를
-          생성합니다.
+          입력한 사진과 신체 정보를 바탕으로 3D 아바타를 생성합니다.
         </p>
 
         <div className="mt-10">
