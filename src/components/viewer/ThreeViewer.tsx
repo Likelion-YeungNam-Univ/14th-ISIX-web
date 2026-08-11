@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Bounds } from '@react-three/drei';
 
 import AvatarModel from './AvatarModel';
 import ViewerLoading from './ViewerLoading';
@@ -23,21 +22,14 @@ const ThreeViewer = ({
         <ViewerErrorBoundary>
           <Canvas
             camera={{
-              position: [0, 0, 3],
+              position: [0, 1.2, 3],
               fov: 45,
             }}
           >
-            <Bounds
-              fit
-              clip
-              observe
-              margin={1.2}
-            >
-              <AvatarModel
-                key={avatarUrl}
-                url={avatarUrl}
-              />
-            </Bounds>
+            <AvatarModel
+              key={avatarUrl}
+              url={avatarUrl}
+            />
           </Canvas>
         </ViewerErrorBoundary>
       </Suspense>
