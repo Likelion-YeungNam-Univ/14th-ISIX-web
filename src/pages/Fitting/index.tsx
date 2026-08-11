@@ -7,6 +7,8 @@ import { getGarments } from '@/api/garment';
 import type { FittingResult } from '@/types/fitting';
 import type { Garment, GarmentSize } from '@/types/garment';
 
+import ThreeViewer from '@/components/viewer/ThreeViewer';
+
 interface FittingPageState {
   jobId: string;
   avatarId: number;
@@ -208,18 +210,16 @@ const Fitting = () => {
               아바타
             </h2>
 
-            <div className="mt-4 flex min-h-96 items-center justify-center rounded-xl border border-dashed border-border bg-bg">
-              <div className="text-center">
-                <p className="text-text-sub">
-                  3D Viewer 연결 예정
-                </p>
-
-                {glbUrl && (
-                  <p className="mt-2 text-sm text-gold">
-                    아바타 3D 데이터 연결 완료
+            <div className="mt-4 h-[520px] overflow-hidden rounded-xl border border-border bg-bg">
+              {glbUrl ? (
+                <ThreeViewer avatarUrl={glbUrl} />
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <p className="text-text-sub">
+                    아바타 3D 데이터를 불러올 수 없습니다.
                   </p>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
 
