@@ -9,11 +9,11 @@ import ViewerLoading from './ViewerLoading';
 import ViewerErrorBoundary from './ViewerErrorBoundary';
 
 interface ThreeViewerProps {
-  avatarUrl: string;
-  garmentUrl: string;
+  avatarUrl?: string;
+  garmentUrl?: string;
 }
 
-const ThreeViewer = ({ avatarUrl, garmentUrl }: ThreeViewerProps) => {
+const ThreeViewer = ({ avatarUrl = '/models/Duck.glb', garmentUrl ='/models/DamagedHelmet.glb' }: ThreeViewerProps) => {
   return (
     <div className="relative h-full w-full">
       <Suspense fallback={<ViewerLoading className="absolute inset-0"/>}>
@@ -25,8 +25,8 @@ const ThreeViewer = ({ avatarUrl, garmentUrl }: ThreeViewerProps) => {
             <Environment preset='studio'/>
             <ContactShadows opacity={0.4} blur={2}/>
             <CameraController/>
-            <AvatarModel url={avatarUrl}/>
-            <GarmentModel url={garmentUrl}/>
+            <AvatarModel key={avatarUrl} url={avatarUrl}/>
+            <GarmentModel key={garmentUrl} url={garmentUrl}/>
           </Canvas>
         </ViewerErrorBoundary>
       </Suspense>
