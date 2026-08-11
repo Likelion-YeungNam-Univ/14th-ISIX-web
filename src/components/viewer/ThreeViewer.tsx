@@ -1,15 +1,20 @@
 // ThreeViewer.tsx
 import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
+<<<<<<< HEAD
 import { Environment, ContactShadows } from '@react-three/drei';
 import GarmentModel from './GarmentModel';
 import CameraController from './CameraController';
+=======
+
+>>>>>>> develop
 import AvatarModel from './AvatarModel';
 import ViewerLoading from './ViewerLoading';
 import ViewerErrorBoundary from './ViewerErrorBoundary';
 
 interface ThreeViewerProps {
   avatarUrl?: string;
+<<<<<<< HEAD
   garmentUrl?: string;
 }
 
@@ -27,11 +32,41 @@ const ThreeViewer = ({ avatarUrl = '/models/Duck.glb', garmentUrl ='/models/Dama
             <CameraController/>
             <AvatarModel key={avatarUrl} url={avatarUrl}/>
             <GarmentModel key={garmentUrl} url={garmentUrl}/>
+=======
+}
+
+const ThreeViewer = ({
+  avatarUrl = '/models/Duck.glb',
+}: ThreeViewerProps) => {
+  return (
+    <div className="relative h-full w-full">
+      <Suspense
+        fallback={
+          <ViewerLoading className="absolute inset-0" />
+        }
+      >
+        <ViewerErrorBoundary>
+          <Canvas
+            camera={{
+              position: [0, 1.2, 3],
+              fov: 45,
+            }}
+          >
+            <AvatarModel
+              key={avatarUrl}
+              url={avatarUrl}
+            />
+>>>>>>> develop
           </Canvas>
         </ViewerErrorBoundary>
       </Suspense>
     </div>
+<<<<<<< HEAD
   )
 }
+=======
+  );
+};
+>>>>>>> develop
 
 export default ThreeViewer;
