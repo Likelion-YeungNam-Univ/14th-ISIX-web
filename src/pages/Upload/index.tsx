@@ -92,31 +92,37 @@ const Upload = () => {
             onPhotoChange={setPhoto}
           />
 
-          <div className="border-t border-border" />
+          {photo && (
+            <>
+              <div className="border-t border-border" />
 
-          <BodyInfoForm
-            bodyInfo={bodyInfo}
-            onBodyInfoChange={setBodyInfo}
-          />
+              <BodyInfoForm
+                bodyInfo={bodyInfo}
+                onBodyInfoChange={setBodyInfo}
+              />
 
-          {submitError && (
-            <p className="mt-4 text-sm text-red-400">
-              {submitError}
-            </p>
-          )}
+              {submitError && (
+                <p className="mt-4 text-sm text-red-400">
+                  {submitError}
+                </p>
+              )}
 
-          <button
-            type="submit"
-            disabled={!isFormValid || isSubmitting}
-            className="w-full rounded-xl bg-gold px-5 py-4 font-semibold text-bg transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {isSubmitting ? '요청 중...' : '아바타 생성하기'}
-          </button>
+              <button
+                type="submit"
+                disabled={!isFormValid || isSubmitting}
+                className="w-full rounded-xl bg-gold px-5 py-4 font-semibold text-bg transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {isSubmitting
+                  ? '요청 중...'
+                  : '아바타 생성하기'}
+              </button>
 
-          {!isFormValid && (
-            <p className="text-center text-sm text-text-sub">
-              사진과 올바른 신체 정보를 모두 입력해 주세요.
-            </p>
+              {!isFormValid && (
+                <p className="text-center text-sm text-text-sub">
+                  올바른 신체 정보를 입력해 주세요.
+                </p>
+              )}
+            </>
           )}
         </form>
       </div>
