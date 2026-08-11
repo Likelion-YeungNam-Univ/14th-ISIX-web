@@ -60,6 +60,9 @@ const Fitting = () => {
   const [garmentsError, setGarmentsError] = useState('');
   const [fittingError, setFittingError] = useState('');
 
+  const [garmentsRetryKey, setGarmentsRetryKey] = useState(0);
+  const [fittingRetryKey, setFittingRetryKey] = useState(0);
+
   const selectedGarment = useMemo(
     () =>
       garments.find(
@@ -116,7 +119,7 @@ const Fitting = () => {
     return () => {
       isCancelled = true;
     };
-  }, [avatarId]);
+  }, [avatarId, garmentsRetryKey]);
 
   useEffect(() => {
     if (!avatarId || selectedGarmentId === null) {
@@ -163,7 +166,7 @@ const Fitting = () => {
     return () => {
       isCancelled = true;
     };
-  }, [avatarId, selectedGarmentId]);
+  }, [avatarId, selectedGarmentId, fittingRetryKey]);
 
   if (!avatarId) {
     return (
@@ -236,9 +239,21 @@ const Fitting = () => {
               )}
 
               {garmentsError && (
-                <p className="mt-4 text-sm text-red-400">
-                  {garmentsError}
-                </p>
+                <div className="mt-4">
+                  <p className="text-sm text-red-400">
+                    {garmentsError}
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setGarmentsRetryKey((prev) => prev + 1)
+                    }
+                    className="mt-3 rounded-lg border border-border px-4 py-2 text-sm font-medium text-text transition hover:border-gold hover:text-gold"
+                  >
+                    다시 시도
+                  </button>
+                </div>
               )}
 
               {!isGarmentsLoading &&
@@ -316,9 +331,21 @@ const Fitting = () => {
               )}
 
               {fittingError && (
-                <p className="mt-4 text-sm text-red-400">
-                  {fittingError}
-                </p>
+                <div className="mt-4">
+                  <p className="text-sm text-red-400">
+                    {fittingError}
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFittingRetryKey((prev) => prev + 1)
+                    }
+                    className="mt-3 rounded-lg border border-border px-4 py-2 text-sm font-medium text-text transition hover:border-gold hover:text-gold"
+                  >
+                    다시 시도
+                  </button>
+                </div>
               )}
 
               {fittingResult && (
