@@ -5,12 +5,14 @@ import Processing from '@/pages/Processing';
 import Fitting from '@/pages/Fitting';
 import Report from '@/pages/Report';
 import NotFound from './pages/NotFound';
+import Avatar from '@/pages/Avatar';
 
 const App = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/upload" element={<Upload />} />
+      <Route path="/avatar" element={<Avatar />} />
       <Route path="/processing" element={<Processing />} />
       <Route path="/fitting" element={<Fitting />} />
       <Route path="/report" element={<Report />} />

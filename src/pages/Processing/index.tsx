@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { getAvatarJob } from '@/api/avatar';
+import { saveCurrentAvatar } from '@/utils/avatarStorage';
 
 interface ProcessingPageState {
   jobId: string;
@@ -67,6 +68,14 @@ const Processing = () => {
 
           setProgress(100);
           setStatusMessage('아바타 생성이 완료되었습니다.');
+
+          saveCurrentAvatar({
+            avatarId: job.avatarId,
+            glbUrl: job.glbUrl,
+            measurements: job.measurements,
+            height,
+            weight,
+          });
 
           navigate('/fitting', {
             replace: true,
