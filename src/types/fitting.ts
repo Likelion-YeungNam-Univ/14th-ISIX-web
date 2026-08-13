@@ -21,7 +21,7 @@ export interface FittingSizeDetail {
 export type FittingSizes = Record<GarmentSize, FittingSizeDetail>;
 
 export interface FittingResult {
-  garmentId: number;
+  garmentId: string;
   sizes: FittingSizes;
   recommendedSize: GarmentSize;
   recommendationReason: string;

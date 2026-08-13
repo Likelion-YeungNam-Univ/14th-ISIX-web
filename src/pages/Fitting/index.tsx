@@ -57,7 +57,7 @@ const Fitting = () => {
 
   const [garments, setGarments] = useState<Garment[]>([]);
   const [selectedGarmentId, setSelectedGarmentId] = useState<
-    number | null
+    string | null
   >(null);
 
   const [fittingResult, setFittingResult] =
@@ -390,7 +390,7 @@ const Fitting = () => {
                               : 'border-border bg-bg text-text'
                           }`}
                         >
-                          {size}
+                          {size.toUpperCase()}
 
                           {sizeDetail.recommended && (
                             <span className="absolute -right-2 -top-2 rounded-full bg-gold px-2 py-1 text-[10px] font-bold text-bg">
@@ -406,7 +406,7 @@ const Fitting = () => {
                     <p className="font-semibold text-text">
                       추천 사이즈:{' '}
                       <span className="text-gold">
-                        {fittingResult.recommendedSize}
+                        {fittingResult.recommendedSize.toUpperCase()}
                       </span>
                     </p>
 
@@ -424,7 +424,7 @@ const Fitting = () => {
               <section className="rounded-2xl border border-border bg-card p-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-text">
-                    {selectedSize} 피팅 결과
+                    {selectedSize?.toUpperCase()} 피팅 결과
                   </h2>
 
                   <span
