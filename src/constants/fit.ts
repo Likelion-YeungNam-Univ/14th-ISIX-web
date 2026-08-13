@@ -14,7 +14,7 @@ export const FIT_COLORS = {
 export const FIT_LABELS = {
   loose: '헐렁',
   good: '적정',
-  tight: '착용 불가',
+  tight: '꽉 낌',
 } as const;
 
 /** 색상만으로 정보를 전달하지 않습니다. 항상 수치를 병기합니다. */
