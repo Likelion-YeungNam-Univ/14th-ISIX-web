@@ -61,7 +61,7 @@ const BodyInfoForm = ({
           </div>
 
           {heightError && (
-            <p role="alert" className="mt-2 text-sm text-fit-tight">
+            <p role="alert" className="mt-2 text-sm text-red-400">
               키는 130cm 이상 200cm 이하로 입력해 주세요.
             </p>
           )}
@@ -87,7 +87,7 @@ const BodyInfoForm = ({
           </div>
 
           {weightError && (
-            <p role="alert" className="mt-2 text-sm text-fit-tight">
+            <p role="alert" className="mt-2 text-sm text-red-400">
               몸무게는 30kg 이상 150kg 이하로 입력해 주세요.
             </p>
           )}
