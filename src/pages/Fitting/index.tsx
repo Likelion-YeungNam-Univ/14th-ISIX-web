@@ -9,6 +9,11 @@ import type { Garment, GarmentSize } from '@/types/garment';
 
 import ThreeViewer from '@/components/viewer/ThreeViewer';
 
+import {
+  FIT_COLORS,
+  type FitVerdict,
+} from '@/constants/fit';
+
 interface FittingPageState {
   jobId: string;
   avatarId: number;
@@ -33,17 +38,31 @@ const bodyPartLabelMap: Record<string, string> = {
   front_width: '앞너비',
 };
 
-const getVerdictStyle = (color: string) => {
-  switch (color) {
-    case 'red':
-      return 'border-red-400/30 bg-red-400/10 text-red-300';
-    case 'blue':
-      return 'border-blue-400/30 bg-blue-400/10 text-blue-300';
-    case 'green':
-      return 'border-green-400/30 bg-green-400/10 text-green-300';
+const normalizeVerdict = (verdict: string): FitVerdict | null => {
+  switch (verdict) {
+    case 'loose':
+    case '여유 있음':
+      return 'loose';
+
+    case 'good':
+    case '적정':
+      return 'good';
+
+    case 'tight':
+    case '꽉 낌':
+      return 'tight';
+
     default:
-      return 'border-border bg-bg text-text-sub';
+      return null;
   }
+};
+
+const getVerdictColor = (verdict: string) => {
+  const normalizedVerdict = normalizeVerdict(verdict);
+
+  return normalizedVerdict
+    ? FIT_COLORS[normalizedVerdict]
+    : '#8C8880';
 };
 
 const Fitting = () => {
@@ -444,9 +463,12 @@ const Fitting = () => {
                   {selectedSizeDetail.parts.map((part) => (
                     <div
                       key={part.part}
-                      className={`rounded-xl border p-4 ${getVerdictStyle(
-                        part.color,
-                      )}`}
+                      className="rounded-xl border p-4"
+                      style={{
+                        borderColor: `${getVerdictColor(part.verdict)}4D`,
+                        backgroundColor: `${getVerdictColor(part.verdict)}1A`,
+                        color: getVerdictColor(part.verdict),
+                      }}
                     >
                       <div className="flex items-center justify-between gap-4">
                         <p className="font-semibold">
