@@ -18,6 +18,21 @@ interface FittingPageState {
   weight?: number;
 }
 
+const bodyPartLabelMap: Record<string, string> = {
+  shoulder_width: '어깨너비',
+  chest_circ: '가슴둘레',
+  waist_circ: '허리둘레',
+  hip_circ: '엉덩이둘레',
+  neck_circ: '목둘레',
+  arm_circ: '팔둘레',
+  thigh_circ: '허벅지둘레',
+  back_length: '등길이',
+  sleeve_length: '팔길이',
+  inseam: '안쪽 다리길이',
+  total_length: '전체 길이',
+  front_width: '앞너비',
+};
+
 const getVerdictStyle = (color: string) => {
   switch (color) {
     case 'red':
@@ -435,7 +450,7 @@ const Fitting = () => {
                     >
                       <div className="flex items-center justify-between gap-4">
                         <p className="font-semibold">
-                          {part.part}
+                          {bodyPartLabelMap[part.part] ?? part.part}
                         </p>
 
                         <span className="text-sm font-medium">
