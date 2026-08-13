@@ -16,7 +16,7 @@ const App = () => {
       <Route path="/processing" element={<Processing />} />
       <Route path="/fitting" element={<Fitting />} />
       <Route path="/report" element={<Report />} />
-
+      
       <Route path="*" element={<NotFound />} />
       {/* TODO
           /upload      사진 입력

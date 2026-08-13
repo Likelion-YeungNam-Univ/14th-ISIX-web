@@ -1,12 +1,34 @@
+import { forwardRef, useEffect } from "react";
 import { useGLTF } from "@react-three/drei";
+import * as THREE from 'three';
 
 interface GarmentModelProps {
-    url : string;
+    url : string; 
+    preloadUrls?: string[];
 }
 
-const GarmentModel = ({ url } : GarmentModelProps) => {
-    const { scene } = useGLTF(url);
+const GarmentModel = forwardRef<THREE.Mesh, GarmentModelProps> (
+    ({url, preloadUrls}, ref)=> {
+        const { scene } = useGLTF(url);
+
+        useEffect(()=>{
+            preloadUrls?.forEach((u)=> useGLTF.preload(u));
+        }, [preloadUrls]);
+
+        // 히트맵 렌더러가 접근할 수 있도록 실제 메시를 ref로 노출
+        useEffect(()=>{
+            scene.traverse((child) =>{
+            const mesh = child as THREE.Mesh;
+            if(mesh.isMesh && ref && typeof ref !== 'function'){
+                ref.current = mesh;
+            }
+        });
+    }, [scene, ref]);
+    
     return <primitive object={scene}/>;
-}
+    }
+)
+
+GarmentModel.displayName = 'GarmentModel';
 
 export default GarmentModel;
