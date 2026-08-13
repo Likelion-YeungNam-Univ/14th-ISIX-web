@@ -1,7 +1,8 @@
 // ThreeViewer.tsx
-import { Suspense } from 'react';
+import { Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
+import * as THREE from 'three';
 import GarmentModel from './GarmentModel';
 import CameraController from './CameraController';
 import AvatarModel from './AvatarModel';
@@ -11,9 +12,12 @@ import ViewerErrorBoundary from './ViewerErrorBoundary';
 interface ThreeViewerProps {
   avatarUrl?: string;
   garmentUrl?: string;
+  preloadUrls?: string[];
 }
 
-const ThreeViewer = ({ avatarUrl = '/models/Duck.glb', garmentUrl ='/models/DamagedHelmet.glb' }: ThreeViewerProps) => {
+const ThreeViewer = ({ avatarUrl = '/models/Duck.glb', garmentUrl ='/models/DamagedHelmet.glb', preloadUrls, }: ThreeViewerProps) => {
+  const garmentMeshRef = useRef<THREE.Mesh>(null);
+
   return (
     <div className="relative h-full w-full">
       <Suspense fallback={<ViewerLoading className="absolute inset-0"/>}>
@@ -26,7 +30,7 @@ const ThreeViewer = ({ avatarUrl = '/models/Duck.glb', garmentUrl ='/models/Dama
             <ContactShadows opacity={0.4} blur={2}/>
             <CameraController/>
             <AvatarModel key={avatarUrl} url={avatarUrl}/>
-            <GarmentModel key={garmentUrl} url={garmentUrl}/>
+            <GarmentModel key={garmentUrl} ref={garmentMeshRef} url={garmentUrl} preloadUrls={preloadUrls}/>
           </Canvas>
         </ViewerErrorBoundary>
       </Suspense>
