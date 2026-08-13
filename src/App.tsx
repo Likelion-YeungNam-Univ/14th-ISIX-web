@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import Splash from './pages/Splash';
 import Home from '@/pages/Home';
 import Upload from '@/pages/Upload';
 import Processing from '@/pages/Processing';
@@ -10,7 +11,9 @@ import Avatar from '@/pages/Avatar';
 const App = () => {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Splash />} />
+      <Route path="/home" element={<Home />} />
+      
       <Route path="/upload" element={<Upload />} />
       <Route path="/avatar" element={<Avatar />} />
       <Route path="/processing" element={<Processing />} />
