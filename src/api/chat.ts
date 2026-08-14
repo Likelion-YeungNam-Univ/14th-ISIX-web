@@ -14,7 +14,7 @@ import { getAccessToken, setAccessToken } from '@/api/client';
 import { MESSAGE_MAX, type ChatEvent, type ChatRequest, type StoredMessage } from '@/types/chat';
 
 /** 백엔드 챗 엔드포인트가 나오면 false 로 바꾸면 됩니다. */
-export const USE_MOCK = true;
+export const USE_MOCK = false;
 
 const CHAT_URL = `${import.meta.env.VITE_API_BASE_URL}/api/v1/chat`;
 
@@ -98,10 +98,16 @@ export function chatErrorText(code: string, fallback: string): string {
 /* 인증 헤더 — client.ts 의 인터셉터와 같은 규칙                          */
 /* ------------------------------------------------------------------ */
 
-function authHeaders(): Record<string, string> {
+/**
+ * `accept` 를 인자로 받습니다.
+ *
+ * 7.1 은 SSE, 7.2 는 JSON 이라 같은 값을 쓸 수 없습니다. 7.2 에
+ * `text/event-stream` 을 보내면 서버가 500 을 냅니다.
+ */
+function authHeaders(accept: string): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    Accept: 'text/event-stream',
+    Accept: accept,
   };
   const token = getAccessToken();
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -163,7 +169,7 @@ export async function* streamChat(
   const open = (): Promise<Response> =>
     doFetch!(CHAT_URL, {
       method: 'POST',
-      headers: authHeaders(),
+      headers: authHeaders('text/event-stream'),
       body: JSON.stringify(req),
       credentials: 'include',
       signal: opts.signal,
@@ -280,13 +286,27 @@ export async function* streamChat(
 /* 대화 기록 조회 — 명세 7.2                                            */
 /* ------------------------------------------------------------------ */
 
+/**
+ * 실패를 조용히 삼키지 않습니다.
+ *
+ * 예전에는 `!res.ok` 면 빈 배열을 돌려줬는데, 그러면 "대화가 비어 있음" 과
+ * "요청이 실패함" 이 구분되지 않습니다. 실제로 헤더가 틀려 500 이 나는데도
+ * 빈 대화처럼 보여서, 서버가 기록을 저장하지 않는 것으로 오해했습니다.
+ *
+ * 호출부(복원 effect)는 실패를 잡아 새 대화로 시작하므로 동작은 같고,
+ * 원인만 드러납니다.
+ */
 export async function fetchHistory(conversationId: string): Promise<StoredMessage[]> {
   if (USE_MOCK) return [];
+
   const res = await fetch(`${CHAT_URL}/${conversationId}`, {
-    headers: authHeaders(),
+    headers: authHeaders('application/json'),
     credentials: 'include',
   });
-  if (!res.ok) return [];
+  if (!res.ok) {
+    throw new Error(`대화 기록 조회 실패 (HTTP ${res.status})`);
+  }
+
   const body = await res.json();
   return body?.data?.messages ?? [];
 }
