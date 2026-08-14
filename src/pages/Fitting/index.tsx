@@ -8,6 +8,8 @@ import type { FittingResult } from '@/types/fitting';
 import type { Garment, GarmentSize } from '@/types/garment';
 
 import ThreeViewer from '@/components/viewer/ThreeViewer';
+import { fetchEaseData } from '@/api/ease';
+import type { ColorScale } from '@/constants/heatmapColors';
 
 import {
   FIT_COLORS,
@@ -96,6 +98,10 @@ const Fitting = () => {
 
   const [garmentsRetryKey, setGarmentsRetryKey] = useState(0);
   const [fittingRetryKey, setFittingRetryKey] = useState(0);
+
+  const [vertexEase, setVertexEase] = useState<number[]>([]);
+  const [colorScale, setColorScale] = useState<ColorScale | undefined>(undefined);
+  const [showHeatmap, setShowHeatmap] = useState(true);
 
   const selectedGarment = useMemo(
     () =>
@@ -202,6 +208,48 @@ const Fitting = () => {
     };
   }, [avatarId, selectedGarmentId, fittingRetryKey]);
 
+  useEffect(()=>{
+    const easeUrl =selectedSizeDetail?.easeUrl;
+
+    if(!easeUrl) {
+      setVertexEase([]);
+      setColorScale(undefined);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const loadEaseData = async () => {
+      try {
+        const easeData = await fetchEaseData(easeUrl);
+
+        if(isCancelled) return;
+
+        setVertexEase(easeData.vertex_ease);
+
+        if(easeData.color_scale) {
+          setColorScale({
+            low: easeData.color_scale[0],
+            high: easeData.color_scale[1],
+          });
+        }
+      } catch(error){
+        console.error('ease.json 조회 실패:', error);
+
+        if(!isCancelled){
+          setVertexEase([]);
+          setColorScale(undefined);
+        }
+      }
+    };
+
+    void loadEaseData();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedSizeDetail?.easeUrl]);
+
   if (!avatarId) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-bg px-6">
@@ -247,9 +295,18 @@ const Fitting = () => {
               아바타
             </h2>
 
+            <button type="button" onClick={()=> setShowHeatmap((prev)=>!prev)}
+            className = "rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text transition hover:border-gold hover:text-gold">
+              히트맵 {showHeatmap ? 'ON' : 'OFF'}
+            </button>
+
             <div className="mt-4 h-[520px] overflow-hidden rounded-xl border border-border bg-bg">
               {glbUrl ? (
-                <ThreeViewer avatarUrl={glbUrl} />
+                <ThreeViewer avatarUrl={glbUrl}
+                garmentUrl={selectedSizeDetail?.modelUrl ?? undefined}
+                showHeatmap={showHeatmap}
+                vertexEase={vertexEase}
+                colorScale={colorScale}/>
               ) : (
                 <div className="flex h-full items-center justify-center">
                   <p className="text-text-sub">
