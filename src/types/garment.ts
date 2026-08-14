@@ -1,7 +1,7 @@
 export type GarmentSize = 's' | 'm' | 'l';
 
 export interface Garment {
-  garmentId: string;
+  garmentId: number;
   name: string;
   thumbnailUrl: string | null;
   category: string;

@@ -1,33 +1,36 @@
-import { Routes, Route } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
+
+import MainLayout from '@/layouts/MainLayout';
+
+import Splash from '@/pages/Splash';
 import Home from '@/pages/Home';
+import Avatar from '@/pages/Avatar';
 import Upload from '@/pages/Upload';
 import Processing from '@/pages/Processing';
 import Fitting from '@/pages/Fitting';
 import Report from '@/pages/Report';
-import NotFound from './pages/NotFound';
-import Avatar from '@/pages/Avatar';
+import My from '@/pages/My';
+import NotFound from '@/pages/NotFound';
 
 const App = () => {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/upload" element={<Upload />} />
-      <Route path="/avatar" element={<Avatar />} />
+      {/* 스플래시 */}
+      <Route path="/" element={<Splash />} />
+
+      <Route element={<MainLayout />}>
+        <Route path="/home" element={<Home />} />
+        <Route path="/avatar" element={<Avatar />} />
+        <Route path="/upload" element={<Upload />} />
+        <Route path="/fitting" element={<Fitting />} />
+        <Route path="/my" element={<My />} />
+      </Route>
+
       <Route path="/processing" element={<Processing />} />
-      <Route path="/fitting" element={<Fitting />} />
       <Route path="/report" element={<Report />} />
-      
+
       <Route path="*" element={<NotFound />} />
-      {/* TODO
-          /upload      사진 입력
-          /avatar      아바타 · 치수
-          /fitting     피팅룸
-          /report      핏 리포트
-          /mypage      마이페이지 (보호 라우트)
-          /auth/callback  소셜 로그인 콜백
-      */}
     </Routes>
-    
   );
 };
 
