@@ -19,7 +19,7 @@ const HeatmapRenderer = ({meshRef, showHeatmap, vertexEase, colorScale = DEFAULT
         if(showHeatmap && vertexEase.length > 0){
             const colors = new Float32Array(vertexEase.length * 3);
             vertexEase.forEach((ease, i)=>{
-                const [r, g, b] = easeToColor(ease);
+                const [r, g, b] = easeToColor(ease, colorScale);
                 colors[i * 3] = r;
                 colors[i * 3 + 1] = g;
                 colors[i * 3 + 2] = b;
