@@ -8,7 +8,7 @@ import type { FittingResult } from '@/types/fitting';
  */
 export const getFittingResult = async (
   avatarId: number,
-  garmentId: string,
+  garmentId: number,
 ): Promise<FittingResult> => {
   const { data } = await apiClient.get<ApiResponse<FittingResult>>(
     `/api/v1/avatars/${avatarId}/garments/${garmentId}/fit`,

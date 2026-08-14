@@ -76,7 +76,7 @@ const Fitting = () => {
 
   const [garments, setGarments] = useState<Garment[]>([]);
   const [selectedGarmentId, setSelectedGarmentId] = useState<
-    string | null
+    number | null
   >(null);
 
   const [fittingResult, setFittingResult] =
