@@ -397,15 +397,31 @@ export function useVoiceChat(config: VoiceChatConfig) {
 
   /* ---------------- 정리 ---------------- */
 
-  const reset = useCallback(() => {
+  /**
+   * 진행 중인 응답을 중단합니다. 창을 닫을 때처럼 더 들을 필요가 없을 때 씁니다.
+   *
+   * 창을 닫아도 컴포넌트는 언마운트되지 않아 훅이 계속 살아 있습니다. 스트림을
+   * 끊지 않으면 남은 delta 가 계속 도착하면서 speak() 가 다시 불려, 닫힌 창에서
+   * 소리가 납니다. 대화 내용은 지우지 않습니다 — 다시 열면 이어서 묻습니다.
+   *
+   * 끊는 순서가 중요합니다. 먼저 스트림을 끊어야 새 문장이 큐에 들어오지 않고,
+   * 그다음 speechSynthesis 를 비워야 이미 큐에 있던 것까지 사라집니다.
+   */
+  const stop = useCallback(() => {
     abortRef.current?.abort();
-    stopSpeaking();
+    abortRef.current = null;
     recognitionRef.current?.abort?.();
+    setListening(false);
+    setInterim('');
+    stopSpeaking();
+  }, [stopSpeaking]);
+
+  const reset = useCallback(() => {
+    stop();
     conversationId.current = undefined;
     saveConversationId(config.mode, undefined);
     setTurns([]);
-    setInterim('');
-  }, [config.mode, stopSpeaking]);
+  }, [config.mode, stop]);
 
   useEffect(
     () => () => {
@@ -426,6 +442,7 @@ export function useVoiceChat(config: VoiceChatConfig) {
     startListening,
     stopListening,
     stopSpeaking,
+    stop,
     reset,
     conversationId: conversationId.current,
   };

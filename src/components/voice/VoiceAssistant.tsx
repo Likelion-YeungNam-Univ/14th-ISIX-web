@@ -51,6 +51,7 @@ export default function VoiceAssistant({ open, onOpenChange, ...config }: Props)
     startListening,
     stopListening,
     stopSpeaking,
+    stop,
     reset,
   } = useVoiceChat({ ...config, muted });
 
@@ -78,9 +79,9 @@ export default function VoiceAssistant({ open, onOpenChange, ...config }: Props)
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' });
   }, [turns, interim]);
 
+  /* 진행 중인 응답까지 끊습니다. 안 끊으면 닫힌 창에서 소리가 계속 납니다 */
   const close = () => {
-    stopListening();
-    stopSpeaking();
+    stop();
     setOpen(false);
   };
 
