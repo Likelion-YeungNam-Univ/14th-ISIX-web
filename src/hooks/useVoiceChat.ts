@@ -52,12 +52,16 @@ function pickKoreanVoice(): Promise<SpeechSynthesisVoice | null> {
     };
     const first = pick();
     if (first) return resolve(first);
-    const onChange = () => {
+
+    // 타임아웃이 먼저 끝나도 리스너를 떼야 합니다. 안 떼면 매 마운트마다 남습니다.
+    const onChange = () => done(pick());
+    const done = (v: SpeechSynthesisVoice | null) => {
+      clearTimeout(timer);
       speechSynthesis.removeEventListener('voiceschanged', onChange);
-      resolve(pick());
+      resolve(v);
     };
+    const timer = setTimeout(() => done(pick()), 1200); // 이벤트가 안 오는 브라우저 대비
     speechSynthesis.addEventListener('voiceschanged', onChange);
-    setTimeout(() => resolve(pick()), 1200); // 이벤트가 안 오는 브라우저 대비
   });
 }
 
@@ -273,6 +277,15 @@ export function useVoiceChat(config: VoiceChatConfig) {
       abortRef.current = ctrl;
       const splitter = new SentenceSplitter();
 
+      /*
+       * 지금까지 읽어 준 문장 수. speak() 는 setTurns 업데이터 밖에서 부릅니다.
+       *
+       * 업데이터 안에 두면 StrictMode 가 순수성 확인을 위해 업데이터를 두 번
+       * 호출하면서 모든 문장이 두 번 재생됩니다. 이 턴에 문장을 붙이는 곳은
+       * 이 루프뿐이라, 여기서 센 값이 배열 인덱스와 그대로 일치합니다.
+       */
+      let spoken = 0;
+
       try {
         for await (const ev of streamChat(req, { signal: ctrl.signal })) {
           if (ev.kind === 'open') {
@@ -286,30 +299,31 @@ export function useVoiceChat(config: VoiceChatConfig) {
             const tail = splitter.peek();
 
             setTurns((prev) =>
-              prev.map((t) => {
-                if (t.id !== botId) return t;
-                const base = t.sentences.length;
-                finished.forEach((s, i) => speak(botId, base + i, s));
-                return { ...t, sentences: [...t.sentences, ...finished], tail };
-              }),
+              prev.map((t) =>
+                t.id === botId
+                  ? { ...t, sentences: [...t.sentences, ...finished], tail }
+                  : t,
+              ),
             );
+            finished.forEach((s) => speak(botId, spoken++, s));
             continue;
           }
 
           if (ev.kind === 'done') {
             const last = splitter.flush();
             setTurns((prev) =>
-              prev.map((t) => {
-                if (t.id !== botId) return t;
-                if (last) speak(botId, t.sentences.length, last);
-                return {
-                  ...t,
-                  sentences: last ? [...t.sentences, last] : t.sentences,
-                  tail: '',
-                  streaming: false,
-                };
-              }),
+              prev.map((t) =>
+                t.id === botId
+                  ? {
+                      ...t,
+                      sentences: last ? [...t.sentences, last] : t.sentences,
+                      tail: '',
+                      streaming: false,
+                    }
+                  : t,
+              ),
             );
+            if (last) speak(botId, spoken++, last);
             continue;
           }
 
@@ -355,6 +369,12 @@ export function useVoiceChat(config: VoiceChatConfig) {
     if (!Ctor || busy) return;
 
     stopSpeaking(); // 말하는 중에 들으면 자기 목소리를 받아 적습니다
+
+    /*
+     * 이전 인식기를 확실히 끊고 시작합니다. 안 끊으면 두 번 눌렸을 때 옛 인식기가
+     * ref 에서만 밀려나고 계속 살아 있어, 같은 발화가 두 번 들어옵니다.
+     */
+    recognitionRef.current?.abort?.();
 
     const rec = new Ctor();
     rec.lang = 'ko-KR';
@@ -420,6 +440,26 @@ export function useVoiceChat(config: VoiceChatConfig) {
     stop();
     conversationId.current = undefined;
     saveConversationId(config.mode, undefined);
+    setTurns([]);
+  }, [config.mode, stop]);
+
+  /**
+   * mode 가 바뀌면 다른 대화로 갈아탑니다.
+   *
+   * conversationId 를 useRef 초기값으로만 읽어서, mode 가 바뀌어도 이전 mode 의
+   * 대화 id 를 계속 들고 갔습니다. 홈(onboarding)과 피팅룸(fitting)이 서버에서
+   * 한 대화로 합쳐지고 개인화 요약도 섞입니다.
+   *
+   * 진행 중이던 응답도 끊습니다. 안 끊으면 그 스트림의 open 이벤트가 방금
+   * 갈아탄 id 를 다시 옛 것으로 덮습니다.
+   */
+  const prevMode = useRef(config.mode);
+  useEffect(() => {
+    if (prevMode.current === config.mode) return;
+    prevMode.current = config.mode;
+
+    stop();
+    conversationId.current = loadConversationId(config.mode);
     setTurns([]);
   }, [config.mode, stop]);
 
