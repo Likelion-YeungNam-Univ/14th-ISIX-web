@@ -1,4 +1,5 @@
-// ThreeViewer.tsx
+import type { ColorScale } from '@/constants/heatmapColors';
+
 import { Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows, Stats } from '@react-three/drei';
@@ -16,9 +17,10 @@ interface ThreeViewerProps {
   preloadUrls?: string[];
   showHeatmap?: boolean;
   vertexEase?: number[];
+  colorScale?: ColorScale;
 }
 
-const ThreeViewer = ({ avatarUrl = '/models/Duck.glb', garmentUrl ='/models/DamagedHelmet.glb', preloadUrls, showHeatmap = false, vertexEase = [],}: ThreeViewerProps) => {
+const ThreeViewer = ({ avatarUrl = '/models/Duck.glb', garmentUrl ='/models/DamagedHelmet.glb', preloadUrls, showHeatmap = false, vertexEase = [], colorScale,}: ThreeViewerProps) => {
   const garmentMeshRef = useRef<THREE.Mesh>(null);
 
   return (
@@ -34,7 +36,7 @@ const ThreeViewer = ({ avatarUrl = '/models/Duck.glb', garmentUrl ='/models/Dama
             <CameraController/>
             <AvatarModel key={avatarUrl} url={avatarUrl}/>
             <GarmentModel key={garmentUrl} ref={garmentMeshRef} url={garmentUrl} preloadUrls={preloadUrls}/>
-            <HeatmapRenderer meshRef={garmentMeshRef} showHeatmap={showHeatmap} vertexEase={vertexEase}/>
+            <HeatmapRenderer meshRef={garmentMeshRef} showHeatmap={showHeatmap} vertexEase={vertexEase} colorScale = {colorScale}/>
             {import.meta.env.DEV && <Stats/>}
           </Canvas>
         </ViewerErrorBoundary>

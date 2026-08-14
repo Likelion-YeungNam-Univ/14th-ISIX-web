@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { getMyAvatars } from '@/api/avatar';
+import { fetchEaseData } from '@/api/ease';
 import { getFittingResult } from '@/api/fitting';
 import { getGarments } from '@/api/garment';
 
@@ -11,6 +12,7 @@ import {
   FIT_COLORS,
   type FitVerdict,
 } from '@/constants/fit';
+import type { ColorScale } from '@/constants/heatmapColors';
 
 import type { AvatarJob } from '@/types/avatar';
 import type { FittingResult } from '@/types/fitting';
@@ -145,6 +147,16 @@ const Fitting = () => {
     setFittingRetryKey,
   ] = useState(0);
 
+  // #30 히트맵 상태
+  const [vertexEase, setVertexEase] = useState<number[]>(
+    [],
+  );
+
+  const [colorScale, setColorScale] =
+    useState<ColorScale | undefined>(undefined);
+
+  const [showHeatmap, setShowHeatmap] = useState(true);
+
   const selectedGarment = useMemo(
     () =>
       garments.find(
@@ -159,6 +171,7 @@ const Fitting = () => {
       ? fittingResult.sizes[selectedSize]
       : null;
 
+  // 저장된 아바타 목록 조회
   useEffect(() => {
     let isCancelled = false;
 
@@ -197,6 +210,7 @@ const Fitting = () => {
     };
   }, []);
 
+  // 현재 아바타 기준 의류 목록 조회
   useEffect(() => {
     if (!avatarId) {
       return;
@@ -254,6 +268,7 @@ const Fitting = () => {
     };
   }, [avatarId, garmentsRetryKey]);
 
+  // 선택된 아바타 + 의류 기준 피팅 결과 조회
   useEffect(() => {
     if (
       !avatarId ||
@@ -311,6 +326,53 @@ const Fitting = () => {
     fittingRetryKey,
   ]);
 
+  // #30: 선택된 사이즈의 ease.json 조회
+  useEffect(() => {
+    const easeUrl = selectedSizeDetail?.easeUrl;
+
+    if (!easeUrl) {
+      setVertexEase([]);
+      setColorScale(undefined);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const loadEaseData = async () => {
+      try {
+        const easeData = await fetchEaseData(easeUrl);
+
+        if (isCancelled) {
+          return;
+        }
+
+        setVertexEase(easeData.vertex_ease);
+
+        setColorScale(
+          easeData.color_scale
+            ? {
+                low: easeData.color_scale[0],
+                high: easeData.color_scale[1],
+              }
+            : undefined,
+        );
+      } catch (error) {
+        console.error('ease.json 조회 실패:', error);
+
+        if (!isCancelled) {
+          setVertexEase([]);
+          setColorScale(undefined);
+        }
+      }
+    };
+
+    void loadEaseData();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedSizeDetail?.easeUrl]);
+
   const handleSelectAvatar = (
     selectedAvatar: AvatarJob,
   ) => {
@@ -332,9 +394,12 @@ const Fitting = () => {
     saveCurrentAvatar(nextAvatar);
     setActiveAvatar(nextAvatar);
 
+    // 이전 아바타의 피팅 결과가 잠시 보이지 않도록 초기화
     setFittingResult(null);
     setSelectedSize(null);
     setFittingError('');
+    setVertexEase([]);
+    setColorScale(undefined);
   };
 
   const renderAvatarList = () => (
@@ -475,11 +540,30 @@ const Fitting = () => {
                   현재 아바타 #{avatarId}
                 </p>
               </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowHeatmap((prev) => !prev)
+                }
+                className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text transition hover:border-gold hover:text-gold"
+              >
+                히트맵 {showHeatmap ? 'ON' : 'OFF'}
+              </button>
             </div>
 
             <div className="mt-4 h-[420px] overflow-hidden rounded-xl border border-border bg-bg sm:h-[520px] lg:h-[calc(100vh-210px)] lg:min-h-[480px] lg:max-h-[650px]">
               {glbUrl ? (
-                <ThreeViewer avatarUrl={glbUrl} />
+                <ThreeViewer
+                  avatarUrl={glbUrl}
+                  garmentUrl={
+                    selectedSizeDetail?.modelUrl ??
+                    undefined
+                  }
+                  showHeatmap={showHeatmap}
+                  vertexEase={vertexEase}
+                  colorScale={colorScale}
+                />
               ) : (
                 <div className="flex h-full items-center justify-center px-6 text-center">
                   <p className="text-text-sub">
