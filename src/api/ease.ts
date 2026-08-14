@@ -4,7 +4,7 @@ export interface EaseJson {
     body_class : string;
     parts: Record<string, number>;
     vertex_ease: number[];
-    color_scale?: [number,number]; // 실제 필드명 확인 필요
+    color_scale?: [number,number];
 }
 
 export const fetchEaseData = async (
