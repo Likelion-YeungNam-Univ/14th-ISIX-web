@@ -453,6 +453,22 @@ export function useVoiceChat(config: VoiceChatConfig) {
    * 진행 중이던 응답도 끊습니다. 안 끊으면 그 스트림의 open 이벤트가 방금
    * 갈아탄 id 를 다시 옛 것으로 덮습니다.
    */
+  /**
+   * 의류나 사이즈가 바뀌면 진행 중이던 응답을 끊습니다.
+   *
+   * 안 끊으면 화면은 M 인데 챗봇은 S 얘기를 계속하게 됩니다. 명세 정확도 항목
+   * `사이즈 추천 일관성`(MUST)이 화면과 발화가 같은 값을 말하도록 요구합니다.
+   * 시연에서 같은 옷의 s/m/l 을 눌러 가며 보여주므로 실제로 자주 겹칩니다.
+   *
+   * 끊긴 지점까지 나온 답변은 화면에 남깁니다 — 사용자가 직접 사이즈를 바꿔
+   * 끊긴 것이라, 지워 버리면 무엇을 보고 있었는지 흔적이 사라집니다.
+   * 대화 자체는 이어지므로 conversationId 는 건드리지 않습니다.
+   */
+  useEffect(() => {
+    if (!abortRef.current) return; // 진행 중인 응답이 없으면 할 일 없음
+    stop();
+  }, [config.garmentId, config.size, stop]);
+
   const prevMode = useRef(config.mode);
   useEffect(() => {
     if (prevMode.current === config.mode) return;
