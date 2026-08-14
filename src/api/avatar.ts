@@ -43,3 +43,12 @@ export const getAvatarJob = async (
 
   return data.data!;
 };
+
+/** 현재 세션에 저장된 아바타 목록 조회 */
+export const getMyAvatars = async (): Promise<AvatarJob[]> => {
+  const { data } = await apiClient.get<ApiResponse<AvatarJob[]>>(
+    '/api/v1/avatars/me',
+  );
+
+  return data.data ?? [];
+};

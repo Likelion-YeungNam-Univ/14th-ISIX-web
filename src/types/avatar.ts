@@ -6,6 +6,8 @@ export interface AvatarJob {
   jobId: string;
   glbUrl: string | null;
   measurements: Record<string, number> | null;
+  height?: number;
+  weight?: number;
 }
 
 export interface AvatarResponse {
