@@ -4,7 +4,7 @@ import type { ApiResponse } from '@/types/api';
 import type { FittingResult } from '@/types/fitting';
 
 /**
- * 선택한 아바타와 의류의 S/M/L 피팅 결과 조회
+ * 선택한 아바타와 의류의 s/m/l 피팅 결과 조회
  */
 export const getFittingResult = async (
   avatarId: number,

@@ -1,4 +1,4 @@
-export type GarmentSize = 'S' | 'M' | 'L';
+export type GarmentSize = 's' | 'm' | 'l';
 
 export interface Garment {
   garmentId: number;
