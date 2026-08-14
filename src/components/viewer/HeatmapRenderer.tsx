@@ -1,14 +1,15 @@
 import { useEffect } from "react";
 import * as THREE from 'three';
-import { easeToColor } from "@/constants/heatmapColors";
+import { easeToColor, DEFAULT_COLOR_SCALE, type ColorScale } from "@/constants/heatmapColors";
 
 interface HeatmapRendererProps {
     meshRef : React.RefObject<THREE.Mesh>;
     showHeatmap: boolean;
     vertexEase: number[];
+    colorScale?: ColorScale;
 }
 
-const HeatmapRenderer = ({meshRef, showHeatmap, vertexEase}: HeatmapRendererProps) => {
+const HeatmapRenderer = ({meshRef, showHeatmap, vertexEase, colorScale = DEFAULT_COLOR_SCALE,}: HeatmapRendererProps) => {
     useEffect(()=> {
         const mesh = meshRef.current;
         if(!mesh) return;
@@ -29,7 +30,7 @@ const HeatmapRenderer = ({meshRef, showHeatmap, vertexEase}: HeatmapRendererProp
             material.vertexColors = false;
         }
         material.needsUpdate = true;
-    }, [showHeatmap, vertexEase, meshRef]);
+    }, [showHeatmap, vertexEase, meshRef, colorScale]);
     return null;
 }
 

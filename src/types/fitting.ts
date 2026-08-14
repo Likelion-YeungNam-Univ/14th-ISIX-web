@@ -11,6 +11,7 @@ export interface FitPart {
 
 export interface FittingSizeDetail {
   modelUrl: string | null;
+  easeUrl: string | null;
   parts: FitPart[];
   penalty: number;
   totalDev: number;
