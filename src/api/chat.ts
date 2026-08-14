@@ -83,6 +83,8 @@ const ERROR_TEXT: Record<string, string> = {
   CHAT_MESSAGE_TOO_LONG: `말씀이 ${MESSAGE_MAX}자를 넘었습니다. 조금 나눠서 말씀해 주세요.`,
   CHAT_AVATAR_REQUIRED: '아바타를 먼저 만들어 주세요. 치수가 있어야 사이즈를 봐 드릴 수 있습니다.',
   CHAT_NOT_FOUND: '이전 대화를 찾지 못했습니다. 새로 시작하겠습니다.',
+  // 남의 아바타로 대화를 시도할 때. 공통 코드라 명세 챗봇 표에는 없습니다.
+  FORBIDDEN: '이 아바타로는 상담할 수 없습니다. 내 아바타를 선택해 주세요.',
   CHAT_RATE_LIMITED: '상담 이용이 잠시 제한됐습니다. 조금 뒤에 다시 말씀해 주세요.',
   CHAT_UPSTREAM_ERROR: '상담 서버 응답에 실패했습니다. 다시 말씀해 주세요.',
   NETWORK: '연결하지 못했습니다. 잠시 뒤 다시 시도해 주세요.',
