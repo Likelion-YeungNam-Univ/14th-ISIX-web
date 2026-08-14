@@ -14,6 +14,8 @@ import {
   type FitVerdict,
 } from '@/constants/fit';
 
+import { getCurrentAvatar } from '@/utils/avatarStorage';
+
 interface FittingPageState {
   jobId: string;
   avatarId: number;
@@ -38,7 +40,9 @@ const bodyPartLabelMap: Record<string, string> = {
   front_width: '앞너비',
 };
 
-const normalizeVerdict = (verdict: string): FitVerdict | null => {
+const normalizeVerdict = (
+  verdict: string,
+): FitVerdict | null => {
   switch (verdict) {
     case 'loose':
     case '여유 있음':
@@ -69,38 +73,68 @@ const Fitting = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const pageState = location.state as FittingPageState | null;
+  const pageState =
+    location.state as FittingPageState | null;
 
-  const avatarId = pageState?.avatarId;
-  const glbUrl = pageState?.glbUrl;
+  const storedAvatar = useMemo(
+    () => getCurrentAvatar(),
+    [],
+  );
+
+  const avatarId =
+    pageState?.avatarId ?? storedAvatar?.avatarId;
+
+  const glbUrl =
+    pageState?.glbUrl ?? storedAvatar?.glbUrl;
 
   const [garments, setGarments] = useState<Garment[]>([]);
-  const [selectedGarmentId, setSelectedGarmentId] = useState<
-    number | null
-  >(null);
 
-  const [fittingResult, setFittingResult] =
-    useState<FittingResult | null>(null);
+  const [
+    selectedGarmentId,
+    setSelectedGarmentId,
+  ] = useState<number | null>(null);
 
-  const [selectedSize, setSelectedSize] =
-    useState<GarmentSize | null>(null);
+  const [
+    fittingResult,
+    setFittingResult,
+  ] = useState<FittingResult | null>(null);
 
-  const [isGarmentsLoading, setIsGarmentsLoading] =
-    useState(false);
+  const [
+    selectedSize,
+    setSelectedSize,
+  ] = useState<GarmentSize | null>(null);
 
-  const [isFittingLoading, setIsFittingLoading] =
-    useState(false);
+  const [
+    isGarmentsLoading,
+    setIsGarmentsLoading,
+  ] = useState(false);
 
-  const [garmentsError, setGarmentsError] = useState('');
-  const [fittingError, setFittingError] = useState('');
+  const [
+    isFittingLoading,
+    setIsFittingLoading,
+  ] = useState(false);
 
-  const [garmentsRetryKey, setGarmentsRetryKey] = useState(0);
-  const [fittingRetryKey, setFittingRetryKey] = useState(0);
+  const [garmentsError, setGarmentsError] =
+    useState('');
+
+  const [fittingError, setFittingError] =
+    useState('');
+
+  const [
+    garmentsRetryKey,
+    setGarmentsRetryKey,
+  ] = useState(0);
+
+  const [
+    fittingRetryKey,
+    setFittingRetryKey,
+  ] = useState(0);
 
   const selectedGarment = useMemo(
     () =>
       garments.find(
-        (garment) => garment.garmentId === selectedGarmentId,
+        (garment) =>
+          garment.garmentId === selectedGarmentId,
       ) ?? null,
     [garments, selectedGarmentId],
   );
@@ -131,10 +165,15 @@ const Fitting = () => {
         setGarments(garmentList);
 
         if (garmentList.length > 0) {
-          setSelectedGarmentId(garmentList[0].garmentId);
+          setSelectedGarmentId(
+            garmentList[0].garmentId,
+          );
         }
       } catch (error) {
-        console.error('의류 목록 조회 실패:', error);
+        console.error(
+          '의류 목록 조회 실패:',
+          error,
+        );
 
         if (!isCancelled) {
           setGarmentsError(
@@ -156,7 +195,10 @@ const Fitting = () => {
   }, [avatarId, garmentsRetryKey]);
 
   useEffect(() => {
-    if (!avatarId || selectedGarmentId === null) {
+    if (
+      !avatarId ||
+      selectedGarmentId === null
+    ) {
       return;
     }
 
@@ -179,9 +221,14 @@ const Fitting = () => {
         }
 
         setFittingResult(result);
-        setSelectedSize(result.recommendedSize);
+        setSelectedSize(
+          result.recommendedSize,
+        );
       } catch (error) {
-        console.error('피팅 결과 조회 실패:', error);
+        console.error(
+          '피팅 결과 조회 실패:',
+          error,
+        );
 
         if (!isCancelled) {
           setFittingError(
@@ -200,7 +247,11 @@ const Fitting = () => {
     return () => {
       isCancelled = true;
     };
-  }, [avatarId, selectedGarmentId, fittingRetryKey]);
+  }, [
+    avatarId,
+    selectedGarmentId,
+    fittingRetryKey,
+  ]);
 
   if (!avatarId) {
     return (
@@ -249,11 +300,14 @@ const Fitting = () => {
 
             <div className="mt-4 h-[520px] overflow-hidden rounded-xl border border-border bg-bg">
               {glbUrl ? (
-                <ThreeViewer avatarUrl={glbUrl} />
+                <ThreeViewer
+                  avatarUrl={glbUrl}
+                />
               ) : (
                 <div className="flex h-full items-center justify-center">
                   <p className="text-text-sub">
-                    아바타 3D 데이터를 불러올 수 없습니다.
+                    아바타 3D 데이터를
+                    불러올 수 없습니다.
                   </p>
                 </div>
               )}
@@ -268,7 +322,8 @@ const Fitting = () => {
 
               {isGarmentsLoading && (
                 <p className="mt-4 text-sm text-text-sub">
-                  의류 목록을 불러오고 있습니다.
+                  의류 목록을 불러오고
+                  있습니다.
                 </p>
               )}
 
@@ -281,7 +336,9 @@ const Fitting = () => {
                   <button
                     type="button"
                     onClick={() =>
-                      setGarmentsRetryKey((prev) => prev + 1)
+                      setGarmentsRetryKey(
+                        (prev) => prev + 1,
+                      )
                     }
                     className="mt-3 rounded-lg border border-border px-4 py-2 text-sm font-medium text-text transition hover:border-gold hover:text-gold"
                   >
@@ -299,51 +356,62 @@ const Fitting = () => {
                 )}
 
               <div className="mt-4 grid gap-3">
-                {garments.map((garment) => {
-                  const isSelected =
-                    garment.garmentId === selectedGarmentId;
+                {garments.map(
+                  (garment) => {
+                    const isSelected =
+                      garment.garmentId ===
+                      selectedGarmentId;
 
-                  return (
-                    <button
-                      key={garment.garmentId}
-                      type="button"
-                      onClick={() =>
-                        setSelectedGarmentId(
-                          garment.garmentId,
-                        )
-                      }
-                      className={`flex items-center gap-4 rounded-xl border p-3 text-left transition ${
-                        isSelected
-                          ? 'border-gold bg-gold/10'
-                          : 'border-border bg-bg'
-                      }`}
-                    >
-                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-card">
-                        {garment.thumbnailUrl ? (
-                          <img
-                            src={garment.thumbnailUrl}
-                            alt={garment.name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-xs text-text-sub">
-                            NO IMAGE
-                          </span>
-                        )}
-                      </div>
+                    return (
+                      <button
+                        key={
+                          garment.garmentId
+                        }
+                        type="button"
+                        onClick={() =>
+                          setSelectedGarmentId(
+                            garment.garmentId,
+                          )
+                        }
+                        className={`flex items-center gap-4 rounded-xl border p-3 text-left transition ${
+                          isSelected
+                            ? 'border-gold bg-gold/10'
+                            : 'border-border bg-bg'
+                        }`}
+                      >
+                        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-card">
+                          {garment.thumbnailUrl ? (
+                            <img
+                              src={
+                                garment.thumbnailUrl
+                              }
+                              alt={
+                                garment.name
+                              }
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-xs text-text-sub">
+                              NO IMAGE
+                            </span>
+                          )}
+                        </div>
 
-                      <div>
-                        <p className="font-semibold text-text">
-                          {garment.name}
-                        </p>
+                        <div>
+                          <p className="font-semibold text-text">
+                            {garment.name}
+                          </p>
 
-                        <p className="mt-1 text-sm text-text-sub">
-                          {garment.category}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
+                          <p className="mt-1 text-sm text-text-sub">
+                            {
+                              garment.category
+                            }
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  },
+                )}
               </div>
             </section>
 
@@ -354,13 +422,15 @@ const Fitting = () => {
 
               {!selectedGarment && (
                 <p className="mt-4 text-sm text-text-sub">
-                  의류를 먼저 선택해 주세요.
+                  의류를 먼저 선택해
+                  주세요.
                 </p>
               )}
 
               {isFittingLoading && (
                 <p className="mt-4 text-sm text-text-sub">
-                  피팅 결과를 계산하고 있습니다.
+                  피팅 결과를 계산하고
+                  있습니다.
                 </p>
               )}
 
@@ -373,7 +443,9 @@ const Fitting = () => {
                   <button
                     type="button"
                     onClick={() =>
-                      setFittingRetryKey((prev) => prev + 1)
+                      setFittingRetryKey(
+                        (prev) => prev + 1,
+                      )
                     }
                     className="mt-3 rounded-lg border border-border px-4 py-2 text-sm font-medium text-text transition hover:border-gold hover:text-gold"
                   >
@@ -391,17 +463,22 @@ const Fitting = () => {
                       ) as GarmentSize[]
                     ).map((size) => {
                       const sizeDetail =
-                        fittingResult.sizes[size];
+                        fittingResult.sizes[
+                          size
+                        ];
 
                       const isSelected =
-                        selectedSize === size;
+                        selectedSize ===
+                        size;
 
                       return (
                         <button
                           key={size}
                           type="button"
                           onClick={() =>
-                            setSelectedSize(size)
+                            setSelectedSize(
+                              size,
+                            )
                           }
                           className={`relative flex-1 rounded-xl border px-4 py-3 font-semibold transition ${
                             isSelected
@@ -443,7 +520,8 @@ const Fitting = () => {
               <section className="rounded-2xl border border-border bg-card p-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-text">
-                    {selectedSize?.toUpperCase()} 피팅 결과
+                    {selectedSize?.toUpperCase()}{' '}
+                    피팅 결과
                   </h2>
 
                   <span
@@ -460,62 +538,87 @@ const Fitting = () => {
                 </div>
 
                 <div className="mt-5 space-y-3">
-                  {selectedSizeDetail.parts.map((part) => (
-                    <div
-                      key={part.part}
-                      className="rounded-xl border p-4"
-                      style={{
-                        borderColor: `${getVerdictColor(part.verdict)}4D`,
-                        backgroundColor: `${getVerdictColor(part.verdict)}1A`,
-                        color: getVerdictColor(part.verdict),
-                      }}
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <p className="font-semibold">
-                          {bodyPartLabelMap[part.part] ?? part.part}
-                        </p>
+                  {selectedSizeDetail.parts.map(
+                    (part) => (
+                      <div
+                        key={part.part}
+                        className="rounded-xl border p-4"
+                        style={{
+                          borderColor: `${getVerdictColor(
+                            part.verdict,
+                          )}4D`,
+                          backgroundColor: `${getVerdictColor(
+                            part.verdict,
+                          )}1A`,
+                          color:
+                            getVerdictColor(
+                              part.verdict,
+                            ),
+                        }}
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <p className="font-semibold">
+                            {bodyPartLabelMap[
+                              part.part
+                            ] ?? part.part}
+                          </p>
 
-                        <span className="text-sm font-medium">
-                          {part.verdict}
-                        </span>
+                          <span className="text-sm font-medium">
+                            {
+                              part.verdict
+                            }
+                          </span>
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-3 gap-3 text-xs">
+                          <div>
+                            <p className="opacity-70">
+                              실제 여유
+                            </p>
+
+                            <p className="mt-1 font-semibold">
+                              {part.actualEase.toFixed(
+                                1,
+                              )}
+                              cm
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="opacity-70">
+                              기준 여유
+                            </p>
+
+                            <p className="mt-1 font-semibold">
+                              {part.refEase.toFixed(
+                                1,
+                              )}
+                              cm
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="opacity-70">
+                              편차
+                            </p>
+
+                            <p className="mt-1 font-semibold">
+                              {part.deviation.toFixed(
+                                1,
+                              )}
+                              cm
+                            </p>
+                          </div>
+                        </div>
                       </div>
-
-                      <div className="mt-3 grid grid-cols-3 gap-3 text-xs">
-                        <div>
-                          <p className="opacity-70">
-                            실제 여유
-                          </p>
-                          <p className="mt-1 font-semibold">
-                            {part.actualEase.toFixed(1)}cm
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="opacity-70">
-                            기준 여유
-                          </p>
-                          <p className="mt-1 font-semibold">
-                            {part.refEase.toFixed(1)}cm
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="opacity-70">
-                            편차
-                          </p>
-                          <p className="mt-1 font-semibold">
-                            {part.deviation.toFixed(1)}cm
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    ),
+                  )}
                 </div>
 
                 {!selectedSizeDetail.modelUrl && (
                   <p className="mt-5 text-sm text-text-sub">
-                    이 사이즈의 3D 착용 모델은 아직 준비되지
-                    않았습니다.
+                    이 사이즈의 3D 착용 모델은 아직
+                    준비되지 않았습니다.
                   </p>
                 )}
               </section>
