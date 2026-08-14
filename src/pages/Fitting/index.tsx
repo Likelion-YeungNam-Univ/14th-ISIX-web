@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { getMyAvatars } from '@/api/avatar';
 import { getFittingResult } from '@/api/fitting';
 import { getGarments } from '@/api/garment';
-
-import type { FittingResult } from '@/types/fitting';
-import type { Garment, GarmentSize } from '@/types/garment';
 
 import ThreeViewer from '@/components/viewer/ThreeViewer';
 
@@ -14,10 +12,18 @@ import {
   type FitVerdict,
 } from '@/constants/fit';
 
-import { getCurrentAvatar } from '@/utils/avatarStorage';
+import type { AvatarJob } from '@/types/avatar';
+import type { FittingResult } from '@/types/fitting';
+import type { Garment, GarmentSize } from '@/types/garment';
+
+import {
+  getCurrentAvatar,
+  saveCurrentAvatar,
+  type CurrentAvatar,
+} from '@/utils/avatarStorage';
 
 interface FittingPageState {
-  jobId: string;
+  jobId?: string;
   avatarId: number;
   glbUrl: string | null;
   measurements: Record<string, number> | null;
@@ -76,16 +82,28 @@ const Fitting = () => {
   const pageState =
     location.state as FittingPageState | null;
 
-  const storedAvatar = useMemo(
-    () => getCurrentAvatar(),
-    [],
-  );
+  const [activeAvatar, setActiveAvatar] =
+    useState<CurrentAvatar | null>(() => {
+      if (pageState?.avatarId) {
+        return {
+          avatarId: pageState.avatarId,
+          glbUrl: pageState.glbUrl,
+          measurements: pageState.measurements,
+          height: pageState.height,
+          weight: pageState.weight,
+        };
+      }
 
-  const avatarId =
-    pageState?.avatarId ?? storedAvatar?.avatarId;
+      return getCurrentAvatar();
+    });
 
-  const glbUrl =
-    pageState?.glbUrl ?? storedAvatar?.glbUrl;
+  const [avatars, setAvatars] = useState<AvatarJob[]>([]);
+  const [isAvatarsLoading, setIsAvatarsLoading] =
+    useState(true);
+  const [avatarsError, setAvatarsError] = useState('');
+
+  const avatarId = activeAvatar?.avatarId;
+  const glbUrl = activeAvatar?.glbUrl;
 
   const [garments, setGarments] = useState<Garment[]>([]);
 
@@ -114,11 +132,8 @@ const Fitting = () => {
     setIsFittingLoading,
   ] = useState(false);
 
-  const [garmentsError, setGarmentsError] =
-    useState('');
-
-  const [fittingError, setFittingError] =
-    useState('');
+  const [garmentsError, setGarmentsError] = useState('');
+  const [fittingError, setFittingError] = useState('');
 
   const [
     garmentsRetryKey,
@@ -145,6 +160,44 @@ const Fitting = () => {
       : null;
 
   useEffect(() => {
+    let isCancelled = false;
+
+    const loadAvatars = async () => {
+      setIsAvatarsLoading(true);
+      setAvatarsError('');
+
+      try {
+        const data = await getMyAvatars();
+
+        if (!isCancelled) {
+          setAvatars(data);
+        }
+      } catch (error) {
+        console.error(
+          '저장 아바타 목록 조회 실패:',
+          error,
+        );
+
+        if (!isCancelled) {
+          setAvatarsError(
+            '저장된 아바타를 불러오지 못했습니다.',
+          );
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsAvatarsLoading(false);
+        }
+      }
+    };
+
+    void loadAvatars();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!avatarId) {
       return;
     }
@@ -165,9 +218,16 @@ const Fitting = () => {
         setGarments(garmentList);
 
         if (garmentList.length > 0) {
-          setSelectedGarmentId(
-            garmentList[0].garmentId,
-          );
+          setSelectedGarmentId((current) => {
+            const stillExists = garmentList.some(
+              (garment) =>
+                garment.garmentId === current,
+            );
+
+            return stillExists
+              ? current
+              : garmentList[0].garmentId;
+          });
         }
       } catch (error) {
         console.error(
@@ -221,9 +281,7 @@ const Fitting = () => {
         }
 
         setFittingResult(result);
-        setSelectedSize(
-          result.recommendedSize,
-        );
+        setSelectedSize(result.recommendedSize);
       } catch (error) {
         console.error(
           '피팅 결과 조회 실패:',
@@ -253,24 +311,137 @@ const Fitting = () => {
     fittingRetryKey,
   ]);
 
+  const handleSelectAvatar = (
+    selectedAvatar: AvatarJob,
+  ) => {
+    if (
+      selectedAvatar.status !== 'done' ||
+      selectedAvatar.avatarId == null
+    ) {
+      return;
+    }
+
+    const nextAvatar: CurrentAvatar = {
+      avatarId: selectedAvatar.avatarId,
+      glbUrl: selectedAvatar.glbUrl,
+      measurements: selectedAvatar.measurements,
+      height: selectedAvatar.height,
+      weight: selectedAvatar.weight,
+    };
+
+    saveCurrentAvatar(nextAvatar);
+    setActiveAvatar(nextAvatar);
+
+    setFittingResult(null);
+    setSelectedSize(null);
+    setFittingError('');
+  };
+
+  const renderAvatarList = () => (
+    <>
+      {isAvatarsLoading && (
+        <p className="mt-4 text-sm text-text-sub">
+          저장된 아바타를 불러오고 있습니다.
+        </p>
+      )}
+
+      {avatarsError && (
+        <p className="mt-4 text-sm text-red-400">
+          {avatarsError}
+        </p>
+      )}
+
+      {!isAvatarsLoading &&
+        !avatarsError &&
+        avatars.length === 0 && (
+          <p className="mt-4 text-sm text-text-sub">
+            저장된 아바타가 없습니다.
+          </p>
+        )}
+
+      {avatars.length > 0 && (
+        <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+          {avatars.map((item) => {
+            const isSelected =
+              item.avatarId != null &&
+              item.avatarId === avatarId;
+
+            const isSelectable =
+              item.status === 'done' &&
+              item.avatarId != null;
+
+            return (
+              <button
+                key={item.jobId}
+                type="button"
+                disabled={!isSelectable}
+                onClick={() =>
+                  handleSelectAvatar(item)
+                }
+                className={`min-w-[150px] shrink-0 rounded-xl border p-4 text-left transition ${
+                  isSelected
+                    ? 'border-gold bg-gold/10'
+                    : 'border-border bg-bg'
+                } ${
+                  isSelectable
+                    ? 'hover:border-gold'
+                    : 'cursor-default opacity-50'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-semibold text-text">
+                    {item.avatarId != null
+                      ? `아바타 #${item.avatarId}`
+                      : '아바타 생성 작업'}
+                  </p>
+
+                  {isSelected && (
+                    <span className="shrink-0 text-xs font-semibold text-gold">
+                      사용 중
+                    </span>
+                  )}
+                </div>
+
+                <p className="mt-2 text-sm text-text-sub">
+                  {item.status === 'done' &&
+                    '생성 완료'}
+                  {item.status === 'processing' &&
+                    '생성 중'}
+                  {item.status === 'failed' &&
+                    '생성 실패'}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+
   if (!avatarId) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-bg px-6">
-        <section className="w-full max-w-xl rounded-2xl border border-border bg-card p-8 text-center">
-          <h1 className="text-2xl font-semibold text-text">
-            아바타 정보가 없습니다
-          </h1>
+      <main className="flex min-h-screen items-center justify-center bg-bg px-6 py-10">
+        <section className="w-full max-w-2xl rounded-2xl border border-border bg-card p-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold text-text">
+              사용할 아바타를 선택해 주세요
+            </h1>
 
-          <p className="mt-4 text-text-sub">
-            아바타를 먼저 생성한 뒤 피팅룸을 이용해 주세요.
-          </p>
+            <p className="mt-4 text-text-sub">
+              저장된 아바타를 불러오거나 새로운
+              아바타를 생성한 뒤 피팅룸을 이용할 수
+              있습니다.
+            </p>
+          </div>
+
+          {renderAvatarList()}
 
           <button
             type="button"
             onClick={() => navigate('/upload')}
-            className="mt-6 rounded-xl bg-gold px-6 py-3 font-semibold text-bg"
+            className="mt-6 w-full rounded-xl bg-gold px-6 py-3 font-semibold text-bg"
           >
-            아바타 생성하기
+            새 아바타 생성하기
           </button>
         </section>
       </main>
@@ -278,52 +449,72 @@ const Fitting = () => {
   }
 
   return (
-    <main className="min-h-screen bg-bg px-6 py-10">
+    <main className="min-h-screen bg-bg px-4 py-6 sm:px-6 sm:py-8">
       <section className="mx-auto w-full max-w-6xl">
         <p className="text-sm font-medium text-gold">
           3D FITTING ROOM
         </p>
 
-        <h1 className="mt-3 text-3xl font-semibold text-text">
+        <h1 className="mt-2 text-3xl font-semibold text-text">
           가상 피팅룸
         </h1>
 
-        <p className="mt-3 text-text-sub">
-          의류와 사이즈를 선택하고 피팅 결과를 확인합니다.
+        <p className="mt-2 text-text-sub">
+          아바타, 의류와 사이즈를 선택하고 피팅 결과를 확인합니다.
         </p>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-          <div className="rounded-2xl border border-border bg-card p-6">
-            <h2 className="text-lg font-semibold text-text">
-              아바타
-            </h2>
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+          <section className="rounded-2xl border border-border bg-card p-5 lg:sticky lg:top-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-text">
+                  아바타
+                </h2>
 
-            <div className="mt-4 h-[520px] overflow-hidden rounded-xl border border-border bg-bg">
+                <p className="mt-1 text-sm text-text-sub">
+                  현재 아바타 #{avatarId}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 h-[420px] overflow-hidden rounded-xl border border-border bg-bg sm:h-[520px] lg:h-[calc(100vh-210px)] lg:min-h-[480px] lg:max-h-[650px]">
               {glbUrl ? (
-                <ThreeViewer
-                  avatarUrl={glbUrl}
-                />
+                <ThreeViewer avatarUrl={glbUrl} />
               ) : (
-                <div className="flex h-full items-center justify-center">
+                <div className="flex h-full items-center justify-center px-6 text-center">
                   <p className="text-text-sub">
-                    아바타 3D 데이터를
-                    불러올 수 없습니다.
+                    아바타 3D 데이터를 불러올 수 없습니다.
                   </p>
                 </div>
               )}
             </div>
-          </div>
+          </section>
 
-          <div className="space-y-6">
-            <section className="rounded-2xl border border-border bg-card p-6">
+          <div className="space-y-5 lg:max-h-[calc(100vh-150px)] lg:overflow-y-auto lg:pr-2">
+            <section className="rounded-2xl border border-border bg-card p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-text">
+                    아바타 선택
+                  </h2>
+
+                  <p className="mt-1 text-sm text-text-sub">
+                    피팅할 아바타를 좌우로 넘겨 선택하세요.
+                  </p>
+                </div>
+              </div>
+
+              {renderAvatarList()}
+            </section>
+
+            <section className="rounded-2xl border border-border bg-card p-5">
               <h2 className="text-lg font-semibold text-text">
                 의류 선택
               </h2>
 
               {isGarmentsLoading && (
                 <p className="mt-4 text-sm text-text-sub">
-                  의류 목록을 불러오고
-                  있습니다.
+                  의류 목록을 불러오고 있습니다.
                 </p>
               )}
 
@@ -355,82 +546,70 @@ const Fitting = () => {
                   </p>
                 )}
 
-              <div className="mt-4 grid gap-3">
-                {garments.map(
-                  (garment) => {
-                    const isSelected =
-                      garment.garmentId ===
-                      selectedGarmentId;
+              <div className="mt-4 max-h-[240px] space-y-3 overflow-y-auto pr-1">
+                {garments.map((garment) => {
+                  const isSelected =
+                    garment.garmentId ===
+                    selectedGarmentId;
 
-                    return (
-                      <button
-                        key={
-                          garment.garmentId
-                        }
-                        type="button"
-                        onClick={() =>
-                          setSelectedGarmentId(
-                            garment.garmentId,
-                          )
-                        }
-                        className={`flex items-center gap-4 rounded-xl border p-3 text-left transition ${
-                          isSelected
-                            ? 'border-gold bg-gold/10'
-                            : 'border-border bg-bg'
-                        }`}
-                      >
-                        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-card">
-                          {garment.thumbnailUrl ? (
-                            <img
-                              src={
-                                garment.thumbnailUrl
-                              }
-                              alt={
-                                garment.name
-                              }
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-xs text-text-sub">
-                              NO IMAGE
-                            </span>
-                          )}
-                        </div>
+                  return (
+                    <button
+                      key={garment.garmentId}
+                      type="button"
+                      onClick={() =>
+                        setSelectedGarmentId(
+                          garment.garmentId,
+                        )
+                      }
+                      className={`flex w-full items-center gap-4 rounded-xl border p-3 text-left transition ${
+                        isSelected
+                          ? 'border-gold bg-gold/10'
+                          : 'border-border bg-bg'
+                      }`}
+                    >
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-card">
+                        {garment.thumbnailUrl ? (
+                          <img
+                            src={garment.thumbnailUrl}
+                            alt={garment.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xs text-text-sub">
+                            NO IMAGE
+                          </span>
+                        )}
+                      </div>
 
-                        <div>
-                          <p className="font-semibold text-text">
-                            {garment.name}
-                          </p>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-text">
+                          {garment.name}
+                        </p>
 
-                          <p className="mt-1 text-sm text-text-sub">
-                            {
-                              garment.category
-                            }
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  },
-                )}
+                        <p className="mt-1 text-sm text-text-sub">
+                          {garment.category}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </section>
 
-            <section className="rounded-2xl border border-border bg-card p-6">
+            <section className="rounded-2xl border border-border bg-card p-5">
               <h2 className="text-lg font-semibold text-text">
                 사이즈
               </h2>
 
               {!selectedGarment && (
                 <p className="mt-4 text-sm text-text-sub">
-                  의류를 먼저 선택해
-                  주세요.
+                  의류를 먼저 선택해 주세요.
                 </p>
               )}
 
               {isFittingLoading && (
                 <p className="mt-4 text-sm text-text-sub">
-                  피팅 결과를 계산하고
-                  있습니다.
+                  피팅 결과를 계산하고 있습니다.
                 </p>
               )}
 
@@ -463,22 +642,17 @@ const Fitting = () => {
                       ) as GarmentSize[]
                     ).map((size) => {
                       const sizeDetail =
-                        fittingResult.sizes[
-                          size
-                        ];
+                        fittingResult.sizes[size];
 
                       const isSelected =
-                        selectedSize ===
-                        size;
+                        selectedSize === size;
 
                       return (
                         <button
                           key={size}
                           type="button"
                           onClick={() =>
-                            setSelectedSize(
-                              size,
-                            )
+                            setSelectedSize(size)
                           }
                           className={`relative flex-1 rounded-xl border px-4 py-3 font-semibold transition ${
                             isSelected
@@ -498,7 +672,7 @@ const Fitting = () => {
                     })}
                   </div>
 
-                  <div className="mt-5 rounded-xl bg-bg p-4">
+                  <div className="mt-4 rounded-xl bg-bg p-4">
                     <p className="font-semibold text-text">
                       추천 사이즈:{' '}
                       <span className="text-gold">
@@ -517,15 +691,15 @@ const Fitting = () => {
             </section>
 
             {selectedSizeDetail && (
-              <section className="rounded-2xl border border-border bg-card p-6">
-                <div className="flex items-center justify-between">
+              <section className="rounded-2xl border border-border bg-card p-5">
+                <div className="flex items-center justify-between gap-4">
                   <h2 className="text-lg font-semibold text-text">
                     {selectedSize?.toUpperCase()}{' '}
                     피팅 결과
                   </h2>
 
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
                       selectedSizeDetail.wearable
                         ? 'bg-green-400/10 text-green-300'
                         : 'bg-red-400/10 text-red-300'
@@ -550,10 +724,9 @@ const Fitting = () => {
                           backgroundColor: `${getVerdictColor(
                             part.verdict,
                           )}1A`,
-                          color:
-                            getVerdictColor(
-                              part.verdict,
-                            ),
+                          color: getVerdictColor(
+                            part.verdict,
+                          ),
                         }}
                       >
                         <div className="flex items-center justify-between gap-4">
@@ -564,9 +737,7 @@ const Fitting = () => {
                           </p>
 
                           <span className="text-sm font-medium">
-                            {
-                              part.verdict
-                            }
+                            {part.verdict}
                           </span>
                         </div>
 

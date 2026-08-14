@@ -136,7 +136,7 @@ const Avatar = () => {
           )}
 
           {avatars.length > 0 && (
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-5 flex gap-3 overflow-x-auto pb-2">
               {avatars.map((item) => {
                 const isSelected =
                   item.avatarId != null &&
@@ -152,9 +152,9 @@ const Avatar = () => {
                     type="button"
                     disabled={!isSelectable}
                     onClick={() => handleSelectAvatar(item)}
-                    className={`rounded-xl border p-4 text-left transition ${
+                    className={`min-w-[160px] shrink-0 rounded-xl border p-4 text-left transition ${
                       isSelected
-                        ? 'border-gold bg-bg'
+                        ? 'border-gold bg-gold/10'
                         : 'border-border bg-bg'
                     } ${
                       isSelectable
