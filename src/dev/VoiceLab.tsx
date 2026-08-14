@@ -23,10 +23,10 @@ import type { ChatMode, Size } from '@/types/chat';
  * design 이름을 띄웁니다. PK 는 목의 GARMENT_BY_PK 와 같은 임시값입니다.
  */
 const GARMENTS = [
-  { id: 1, design: 'shirt_slim' },
-  { id: 2, design: 'dress_basic' },
-  { id: 3, design: 'pants_slacks' },
-  { id: 4, design: 'skirt_pencil' },
+  { id: 2, design: 'shirt_slim' },
+  { id: 4, design: 'dress_basic' },
+  { id: 5, design: 'pants_slacks' },
+  { id: 6, design: 'skirt_pencil' },
 ] as const;
 const SIZES: Size[] = ['s', 'm', 'l'];
 const FAULTS: MockFault[] = ['none', 'upstream', 'rateLimit', 'stall', 'notFound'];

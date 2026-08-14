@@ -215,17 +215,19 @@ const FITS: Record<string, GarmentFit> = {
 /**
  * 의류 PK → design 이름.
  *
- * ⚠️ 값이 임시입니다. 백엔드 시드의 실제 PK 를 받으면 이 표만 바꿉니다.
+ * 2026-08-14 운영 서버 `GET /api/v1/garments` 응답에서 확인한 실제 시드입니다.
  *
- * 실서버에서는 프론트가 `/api/v1/garments` 로 받은 PK 를 그대로 보내고,
- * design 이름으로 바꾸는 것은 백엔드가 AI 로 넘길 때만 합니다. 이 표는
- * 목이 부록 B 데이터를 찾기 위한 것이라 목 안에서만 씁니다.
+ * 실서버에서는 프론트가 목록으로 받은 PK 를 그대로 보내고, design 이름으로
+ * 바꾸는 것은 백엔드가 AI 로 넘길 때만 합니다. 이 표는 목이 부록 B 데이터를
+ * 찾기 위한 것이라 목 안에서만 씁니다.
  */
 const GARMENT_BY_PK: Record<number, string> = {
-  1: 'shirt_slim',
-  2: 'dress_basic',
-  3: 'pants_slacks',
-  4: 'skirt_pencil',
+  1: 'tshirt_basic',
+  2: 'shirt_slim',
+  3: 'shirt_over',
+  4: 'dress_basic',
+  5: 'pants_slacks',
+  6: 'skirt_pencil',
 };
 
 /**
