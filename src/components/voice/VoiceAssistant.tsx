@@ -113,7 +113,7 @@ export default function VoiceAssistant({ open, onOpenChange, ...config }: Props)
         type="button"
         onClick={() => setOpen(true)}
         aria-label="음성 상담 부르기"
-        className="fixed bottom-6 right-6 z-40 grid h-14 w-14 place-items-center rounded-full border border-border bg-card text-gold shadow-lg transition-colors hover:border-gold"
+        className="fixed bottom-24 right-5 z-40 grid h-14 w-14 place-items-center rounded-full border border-border bg-card text-gold shadow-lg transition-colors hover:border-gold sm:bottom-6 sm:right-6"
       >
         <MicIcon className="h-6 w-6" />
       </button>
@@ -126,7 +126,7 @@ export default function VoiceAssistant({ open, onOpenChange, ...config }: Props)
     <div
       role="dialog"
       aria-label="음성 상담"
-      className="fixed bottom-6 right-6 z-40 flex max-h-[70vh] w-[min(24rem,calc(100vw-3rem))] flex-col rounded-lg border border-border bg-card shadow-2xl"
+      className="fixed bottom-24 right-5 z-40 flex max-h-[70vh] w-[min(24rem,calc(100vw-2.5rem))] flex-col rounded-lg border border-border bg-card shadow-2xl sm:bottom-6 sm:right-6"
     >
       <header className="flex items-center justify-between border-b border-border px-5 py-3">
         <span className="text-[11px] uppercase tracking-[0.18em] text-text-sub">상담</span>

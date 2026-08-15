@@ -4,6 +4,7 @@ import MainLayout from '@/layouts/MainLayout';
 
 import Splash from '@/pages/Splash';
 import Home from '@/pages/Home';
+import Collections from '@/pages/Home/Collections';
 import Avatar from '@/pages/Avatar';
 import Upload from '@/pages/Upload';
 import Processing from '@/pages/Processing';
@@ -15,11 +16,11 @@ import NotFound from '@/pages/NotFound';
 const App = () => {
   return (
     <Routes>
-      {/* 스플래시 */}
       <Route path="/" element={<Splash />} />
 
       <Route element={<MainLayout />}>
         <Route path="/home" element={<Home />} />
+        <Route path="/home/collections" element={<Collections />} />
         <Route path="/avatar" element={<Avatar />} />
         <Route path="/upload" element={<Upload />} />
         <Route path="/fitting" element={<Fitting />} />
