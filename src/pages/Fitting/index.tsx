@@ -8,6 +8,8 @@ import { getGarments } from '@/api/garment';
 
 import ThreeViewer from '@/components/viewer/ThreeViewer';
 
+import VoiceAssistant from '@/components/voice/VoiceAssistant';
+
 import {
   FIT_COLORS,
   type FitVerdict,
@@ -509,6 +511,13 @@ const Fitting = () => {
             새 아바타 생성하기
           </button>
         </section>
+
+        <VoiceAssistant
+          mode="fitting"
+          avatarId={avatarId}
+          garmentId={selectedGarmentId ?? undefined}
+          size={selectedSize ?? undefined}
+        />
       </main>
     );
   }
@@ -881,6 +890,13 @@ const Fitting = () => {
           </div>
         </div>
       </section>
+
+      <VoiceAssistant
+        mode="fitting"
+        avatarId={avatarId}
+        garmentId={selectedGarmentId ?? undefined}
+        size={selectedSize ?? undefined}
+      />
     </main>
   );
 };
