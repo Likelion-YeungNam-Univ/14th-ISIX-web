@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { createAvatar } from '../../api/avatar';
 import { ensureGuestSession } from '@/api/session';
 
@@ -8,8 +8,16 @@ import BodyInfoForm, {
 } from './components/BodyInfoForm';
 import PhotoUploader from './components/PhotoUploader';
 
+interface UploadPageState {
+  garmentId?: number;
+}
+
 const Upload = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const pageState =
+    location.state as UploadPageState | null;
 
   const [photo, setPhoto] = useState<File | null>(null);
   const [bodyInfo, setBodyInfo] = useState<BodyInfo>({
@@ -55,6 +63,7 @@ const Upload = () => {
           jobId,
           height: Number(bodyInfo.height),
           weight: Number(bodyInfo.weight),
+          garmentId: pageState?.garmentId
         },
       });
     } catch (error) {

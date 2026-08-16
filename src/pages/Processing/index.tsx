@@ -8,6 +8,7 @@ interface ProcessingPageState {
   jobId: string;
   height: number;
   weight: number;
+  garmentId?: number;
 }
 
 const POLLING_INTERVAL = 2000;
@@ -21,6 +22,7 @@ const Processing = () => {
   const jobId = pageState?.jobId;
   const height = pageState?.height;
   const weight = pageState?.weight;
+  const garmentId = pageState?.garmentId;
 
   const [progress, setProgress] = useState<number | null>(null);
   const [statusMessage, setStatusMessage] = useState(
@@ -86,6 +88,7 @@ const Processing = () => {
               measurements: job.measurements,
               height,
               weight,
+              garmentId,
             },
           });
 
@@ -118,7 +121,7 @@ const Processing = () => {
         window.clearTimeout(pollTimer);
       }
     };
-  }, [jobId, height, weight, navigate, retryCount]);
+  }, [jobId, height, weight, garmentId, navigate, retryCount]);
 
   const handleRetry = () => {
     setProgress(null);

@@ -33,6 +33,7 @@ interface FittingPageState {
   measurements: Record<string, number> | null;
   height?: number;
   weight?: number;
+  garmentId?: number;
 }
 
 const bodyPartLabelMap: Record<string, string> = {
@@ -114,7 +115,10 @@ const Fitting = () => {
   const [
     selectedGarmentId,
     setSelectedGarmentId,
-  ] = useState<number | null>(null);
+  ] = useState<number | null>(
+    () => pageState?.garmentId ?? null,
+  );
+  
 
   const [
     fittingResult,
@@ -505,7 +509,14 @@ const Fitting = () => {
 
           <button
             type="button"
-            onClick={() => navigate('/upload')}
+            onClick={() =>
+              navigate('/upload', {
+                state: {
+                  garmentId:
+                    selectedGarmentId ?? undefined,
+                },
+              })
+            }
             className="mt-6 w-full rounded-xl bg-gold px-6 py-3 font-semibold text-bg"
           >
             새 아바타 생성하기
