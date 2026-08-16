@@ -51,3 +51,26 @@ export interface Turn {
   speakingIndex: number | null;
   streaming: boolean;
 }
+
+export interface ChatSummaryItem {
+  garmentId: number;
+  name: string;
+  size: string;
+  wearable: boolean;
+  bestFit: boolean;
+  note: string;
+}
+
+export interface ChatPreference {
+  purpose: string | null;
+  concerns: string[];
+  preferredFit: string | null;
+  avoid: string | null;
+}
+
+export interface ChatSummary {
+  conversationId: string;
+  headline: string | null;
+  items: ChatSummaryItem[];
+  preference: ChatPreference | null;
+}

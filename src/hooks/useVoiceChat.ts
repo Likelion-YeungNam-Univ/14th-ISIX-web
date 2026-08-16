@@ -109,6 +109,32 @@ function saveConversationId(mode: ChatMode, id: string | undefined) {
   }
 }
 
+const historyKey = (mode: ChatMode) =>
+  `closr_chat_history_${mode}`;
+
+function saveConversationToHistory(
+  mode: ChatMode,
+  id: string,
+) {
+  try {
+    const key = historyKey(mode);
+    const raw = localStorage.getItem(key);
+
+    const ids: string[] = raw
+      ? JSON.parse(raw)
+      : [];
+
+    if (ids.includes(id)) return;
+
+    localStorage.setItem(
+      key,
+      JSON.stringify([id, ...ids]),
+    );
+  } catch {
+    /* 기록 저장 실패가 상담 자체를 막으면 안 됩니다 */
+  }
+}
+
 /** 저장된 기록을 화면 턴으로 되돌립니다. 문장 분할은 재생 때와 같은 규칙입니다. */
 function toTurns(messages: StoredMessage[]): Turn[] {
   return messages.map((m) => {
@@ -291,6 +317,10 @@ export function useVoiceChat(config: VoiceChatConfig) {
           if (ev.kind === 'open') {
             conversationId.current = ev.conversationId;
             saveConversationId(config.mode, ev.conversationId);
+            saveConversationToHistory(
+              config.mode,
+              ev.conversationId,
+            );
             continue;
           }
 

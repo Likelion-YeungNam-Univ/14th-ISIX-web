@@ -1,4 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { getMyAvatars } from '@/api/avatar';
@@ -83,6 +88,11 @@ const getVerdictColor = (verdict: string) => {
 const Fitting = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const lastFittingRequestRef = useRef<{
+    key: string;
+    promise: Promise<FittingResult>;
+  } | null>(null);
 
   const pageState =
     location.state as FittingPageState | null;
@@ -275,62 +285,82 @@ const Fitting = () => {
   }, [avatarId, garmentsRetryKey]);
 
   // 선택된 아바타 + 의류 기준 피팅 결과 조회
-  useEffect(() => {
-    if (
-      !avatarId ||
-      selectedGarmentId === null
-    ) {
-      return;
-    }
-
-    let isCancelled = false;
-
-    const loadFittingResult = async () => {
-      setIsFittingLoading(true);
-      setFittingError('');
-      setFittingResult(null);
-      setSelectedSize(null);
-
-      try {
-        const result = await getFittingResult(
-          avatarId,
-          selectedGarmentId,
-        );
-
-        if (isCancelled) {
-          return;
-        }
-
-        setFittingResult(result);
-        setSelectedSize(result.recommendedSize);
-      } catch (error) {
-        console.error(
-          '피팅 결과 조회 실패:',
-          error,
-        );
-
-        if (!isCancelled) {
-          setFittingError(
-            '피팅 결과를 불러오지 못했습니다.',
-          );
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsFittingLoading(false);
-        }
+    useEffect(() => {
+      if (
+        !avatarId ||
+        selectedGarmentId === null
+      ) {
+        return;
       }
-    };
 
-    void loadFittingResult();
+      let isCancelled = false;
 
-    return () => {
-      isCancelled = true;
-    };
-  }, [
-    avatarId,
-    selectedGarmentId,
-    fittingRetryKey,
-  ]);
+      const loadFittingResult = async () => {
+        setIsFittingLoading(true);
+        setFittingError('');
+        setFittingResult(null);
+        setSelectedSize(null);
+
+        const requestKey =
+          `${avatarId}:${selectedGarmentId}:${fittingRetryKey}`;
+
+        let requestPromise: Promise<FittingResult>;
+
+        if (
+          lastFittingRequestRef.current?.key ===
+          requestKey
+        ) {
+          requestPromise =
+            lastFittingRequestRef.current.promise;
+        } else {
+          requestPromise = getFittingResult(
+            avatarId,
+            selectedGarmentId,
+          );
+
+          lastFittingRequestRef.current = {
+            key: requestKey,
+            promise: requestPromise,
+          };
+        }
+
+        try {
+          const result = await requestPromise;
+
+          if (isCancelled) {
+            return;
+          }
+
+          setFittingResult(result);
+          setSelectedSize(result.recommendedSize);
+        } catch (error) {
+          console.error(
+            '피팅 결과 조회 실패:',
+            error,
+          );
+
+          if (!isCancelled) {
+            setFittingError(
+              '피팅 결과를 불러오지 못했습니다.',
+            );
+          }
+        } finally {
+          if (!isCancelled) {
+            setIsFittingLoading(false);
+          }
+        }
+      };
+
+      void loadFittingResult();
+
+      return () => {
+        isCancelled = true;
+      };
+    }, [
+      avatarId,
+      selectedGarmentId,
+      fittingRetryKey,
+    ]);
 
   // #30: 선택된 사이즈의 ease.json 조회
   useEffect(() => {
