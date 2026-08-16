@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useDeferredValue, useEffect } from "react";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from 'three';
 
@@ -7,7 +7,8 @@ interface AvatarModelProps {
 }
 
 const AvatarModel = ({ url }: AvatarModelProps) => {
-    const { scene } = useGLTF(url);
+    const deferredUrl = useDeferredValue(url);
+    const { scene } = useGLTF(deferredUrl, true);
 
     useEffect(() => {
         scene.traverse((child) => {
