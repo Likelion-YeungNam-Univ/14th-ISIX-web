@@ -1,4 +1,5 @@
 import type { ColorScale } from '@/constants/heatmapColors';
+import PerfMonitor from './PerfMonitor';
 
 import { Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
@@ -38,6 +39,7 @@ const ThreeViewer = ({ avatarUrl = '/models/Duck.glb', garmentUrl ='/models/Dama
             <GarmentModel ref={garmentMeshRef} url={garmentUrl} preloadUrls={preloadUrls}/>
             <HeatmapRenderer meshRef={garmentMeshRef} showHeatmap={showHeatmap} vertexEase={vertexEase} colorScale = {colorScale}/>
             {import.meta.env.DEV && <Stats/>}
+            {import.meta.env.DEV && <PerfMonitor/>}
           </Canvas>
         </ViewerErrorBoundary>
       </Suspense>
