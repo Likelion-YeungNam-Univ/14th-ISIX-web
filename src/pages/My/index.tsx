@@ -3,29 +3,40 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  useMutation,
   useQueries,
   useQuery,
+  useQueryClient,
 } from '@tanstack/react-query';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 
 import { getMyFittings } from '@/api/fitting';
-import { getGarments } from '@/api/garment';
+import {
+  getGarmentDetail,
+  getGarments,
+} from '@/api/garment';
 import {
   fetchHistory,
   fetchSummary,
   getStoredFittingConversationIds,
 } from '@/api/myChat';
-import { getMyLikes } from '@/api/like';
+import {
+  getMyLikes,
+  unlikeGarment,
+} from '@/api/like';
 
 import type {
   ChatSummary,
   StoredMessage,
 } from '@/types/chat';
+import type { LikedGarment } from '@/types/like';
 
 type MyTab = 'fitting' | 'report';
 
 const My = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] =
     useState<MyTab>('fitting');
@@ -34,6 +45,11 @@ const My = () => {
     openReportId,
     setOpenReportId,
   ] = useState<string | null>(null);
+
+  const [
+    selectedLikedGarmentId,
+    setSelectedLikedGarmentId,
+  ] = useState<number | null>(null);
 
   /* ================================================== */
   /* 저장된 피팅                                        */
@@ -55,6 +71,10 @@ const My = () => {
     queryFn: getGarments,
   });
 
+  /* ================================================== */
+  /* 찜한 의류                                          */
+  /* ================================================== */
+
   const {
     data: likedGarments = [],
     isLoading: isLikesLoading,
@@ -63,6 +83,98 @@ const My = () => {
     queryKey: ['my-likes'],
     queryFn: getMyLikes,
   });
+
+  const selectedLikedGarment =
+    likedGarments.find(
+      (garment) =>
+        garment.garmentId ===
+        selectedLikedGarmentId,
+    ) ?? null;
+
+  const {
+    data: selectedGarmentDetail,
+    isLoading: isSelectedGarmentLoading,
+  } = useQuery({
+    queryKey: [
+      'garment-detail',
+      selectedLikedGarmentId,
+    ],
+    queryFn: () => {
+      if (
+        selectedLikedGarmentId === null
+      ) {
+        throw new Error(
+          '선택된 의류가 없습니다.',
+        );
+      }
+
+      return getGarmentDetail(
+        selectedLikedGarmentId,
+      );
+    },
+    enabled:
+      selectedLikedGarmentId !== null,
+  });
+
+  const unlikeMutation = useMutation({
+    mutationFn: unlikeGarment,
+
+    onMutate: async (
+      garmentId: number,
+    ) => {
+      await queryClient.cancelQueries({
+        queryKey: ['my-likes'],
+      });
+
+      const previousLikes =
+        queryClient.getQueryData<
+          LikedGarment[]
+        >(['my-likes']) ?? [];
+
+      queryClient.setQueryData<
+        LikedGarment[]
+      >(
+        ['my-likes'],
+        previousLikes.filter(
+          (garment) =>
+            garment.garmentId !==
+            garmentId,
+        ),
+      );
+
+      return {
+        previousLikes,
+      };
+    },
+
+    onError: (
+      _error,
+      _garmentId,
+      context,
+    ) => {
+      if (
+        context?.previousLikes
+      ) {
+        queryClient.setQueryData(
+          ['my-likes'],
+          context.previousLikes,
+        );
+      }
+    },
+
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['my-likes'],
+      });
+    },
+  });
+
+  const selectedSizeText =
+    selectedGarmentDetail?.sizes
+      .map((size) =>
+        size.size.toUpperCase(),
+      )
+      .join(' · ') ?? '';
 
   const fittings =
     fittingData?.fittings ?? [];
@@ -441,7 +553,8 @@ const My = () => {
                       'Inter, sans-serif',
                   }}
                 >
-                  찜한 의류를 불러오는 중입니다.
+                  찜한 의류를 불러오는
+                  중입니다.
                 </p>
               )}
 
@@ -453,7 +566,8 @@ const My = () => {
                       'Inter, sans-serif',
                   }}
                 >
-                  찜한 의류를 불러오지 못했습니다.
+                  찜한 의류를 불러오지
+                  못했습니다.
                 </p>
               )}
 
@@ -468,7 +582,8 @@ const My = () => {
                         'Inter, sans-serif',
                     }}
                   >
-                    아직 찜한 의류가 없습니다.
+                    아직 찜한 의류가
+                    없습니다.
                   </p>
                 )}
 
@@ -484,6 +599,11 @@ const My = () => {
                             garment.garmentId
                           }
                           type="button"
+                          onClick={() =>
+                            setSelectedLikedGarmentId(
+                              garment.garmentId,
+                            )
+                          }
                           className="flex h-[30px] shrink-0 items-center gap-[5px] rounded-[20px] border-[0.71px] border-white/[0.07] bg-[#141414] px-[12px] py-[6px]"
                         >
                           <HeartIcon className="h-[17px] w-[17px] shrink-0 text-[#F87171]" />
@@ -515,7 +635,6 @@ const My = () => {
         {activeTab ===
           'report' && (
           <section className="px-[24px] pb-[120px] pt-[16px]">
-            {/* 통계 */}
             <div className="grid h-[62px] grid-cols-3 gap-[8px]">
               <StatCard
                 label="총 대화"
@@ -547,9 +666,7 @@ const My = () => {
               {isReportLoading &&
                 reports.length >
                   0 && (
-                  <StatusBox
-                    fullWidth
-                  >
+                  <StatusBox fullWidth>
                     상담 리포트를
                     불러오는 중입니다.
                   </StatusBox>
@@ -558,9 +675,7 @@ const My = () => {
               {!isReportLoading &&
                 reports.length ===
                   0 && (
-                  <StatusBox
-                    fullWidth
-                  >
+                  <StatusBox fullWidth>
                     아직 AI 상담 기록이
                     없습니다.
                   </StatusBox>
@@ -639,6 +754,174 @@ const My = () => {
           </section>
         )}
       </div>
+
+      {/* ============================================ */}
+      {/* LIKED GARMENT BOTTOM SHEET                   */}
+      {/* ============================================ */}
+
+      {selectedLikedGarment &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[100] flex items-end bg-black/60"
+            onClick={() =>
+              setSelectedLikedGarmentId(
+                null,
+              )
+            }
+          >
+            <section
+              className="relative w-full rounded-t-[24px] border-t border-white/10 bg-[#141414] px-5 pb-8 pt-4"
+              onClick={(event) =>
+                event.stopPropagation()
+              }
+            >
+              <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-white/20" />
+
+              {/* 찜 취소 */}
+              <button
+                type="button"
+                aria-label="찜 취소"
+                disabled={
+                  unlikeMutation.isPending
+                }
+                onClick={() => {
+                  const garmentId =
+                    selectedLikedGarment.garmentId;
+
+                  setSelectedLikedGarmentId(
+                    null,
+                  );
+
+                  unlikeMutation.mutate(
+                    garmentId,
+                  );
+                }}
+                className="absolute right-[20px] top-[18px] flex h-[25px] w-[25px] items-center justify-center text-[#F87171]"
+              >
+                <HeartIcon className="h-[25px] w-[25px]" />
+              </button>
+
+              <div className="flex items-center gap-4">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[8px] bg-[#eeeeeb]">
+                  {selectedLikedGarment.thumbnailUrl ? (
+                    <img
+                      src={
+                        selectedLikedGarment.thumbnailUrl
+                      }
+                      alt={
+                        selectedLikedGarment.name
+                      }
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <GarmentPlaceholderIcon className="h-10 w-10 text-[#9A9490]" />
+                  )}
+                </div>
+
+                <div className="min-w-0 pr-[32px]">
+                  <p
+                    className="text-[10px] uppercase tracking-[1px] text-[#C9A96E]"
+                    style={{
+                      fontFamily:
+                        '"DM Mono", monospace',
+                    }}
+                  >
+                    {formatGarmentCategory(
+                      selectedLikedGarment.category,
+                    )}
+                  </p>
+
+                  <h2
+                    className="mt-1 truncate text-[16px] font-medium text-[#F0EBE2]"
+                    style={{
+                      fontFamily:
+                        'Inter, sans-serif',
+                    }}
+                  >
+                    {
+                      selectedLikedGarment.name
+                    }
+                  </h2>
+
+                  {isSelectedGarmentLoading && (
+                    <p className="mt-2 text-[12px] text-[#9A9490]">
+                      상품 정보를
+                      불러오는 중입니다.
+                    </p>
+                  )}
+
+                  {!isSelectedGarmentLoading &&
+                    selectedSizeText && (
+                      <p
+                        className="mt-2 text-[12px] text-[#9A9490]"
+                        style={{
+                          fontFamily:
+                            '"DM Mono", monospace',
+                        }}
+                      >
+                        {selectedSizeText}
+                      </p>
+                    )}
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      '/fitting',
+                      {
+                        state: {
+                          garmentId:
+                            selectedLikedGarment.garmentId,
+                        },
+                      },
+                    )
+                  }
+                  className="h-12 rounded-[10px] border border-[#C9A96E] text-sm font-medium text-[#C9A96E]"
+                >
+                  입어보기
+                </button>
+
+                <button
+                  type="button"
+                  disabled={
+                    isSelectedGarmentLoading ||
+                    !selectedGarmentDetail
+                      ?.purchaseUrl
+                  }
+                  onClick={() => {
+                    const purchaseUrl =
+                      selectedGarmentDetail
+                        ?.purchaseUrl;
+
+                    if (!purchaseUrl) {
+                      return;
+                    }
+
+                    window.open(
+                      purchaseUrl,
+                      '_blank',
+                      'noopener,noreferrer',
+                    );
+                  }}
+                  className={[
+                    'h-12 rounded-[10px] bg-[#C9A96E] text-sm font-medium text-[#141414]',
+                    isSelectedGarmentLoading ||
+                    !selectedGarmentDetail
+                      ?.purchaseUrl
+                      ? 'cursor-not-allowed opacity-50'
+                      : '',
+                  ].join(' ')}
+                >
+                  구매하기
+                </button>
+              </div>
+            </section>
+          </div>,
+          document.body,
+        )}
     </main>
   );
 };
@@ -674,9 +957,7 @@ function FittingCard({
         {thumbnailUrl ? (
           <img
             src={thumbnailUrl}
-            alt={
-              fitting.garmentName
-            }
+            alt={fitting.garmentName}
             className="h-full w-full object-contain"
           />
         ) : (
@@ -819,7 +1100,6 @@ function ReportCard({
           : 'rgba(255, 255, 255, 0.07)',
       }}
     >
-      {/* 카드 상단 */}
       <button
         type="button"
         onClick={onToggle}
@@ -828,8 +1108,10 @@ function ReportCard({
         <div
           className="flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-[8px] border-[0.7px]"
           style={{
-            borderColor: 'rgba(201, 169, 110, 0.28)',
-            backgroundColor: 'rgba(201, 169, 110, 0.12)',
+            borderColor:
+              'rgba(201, 169, 110, 0.28)',
+            backgroundColor:
+              'rgba(201, 169, 110, 0.12)',
           }}
         >
           <AssistantIcon className="h-[24px] w-[24px] text-[#C9A96E]" />
@@ -897,12 +1179,8 @@ function ReportCard({
 
                 <span className="flex items-center gap-[4px] text-[#C9A96E]">
                   <span className="h-[5px] w-[5px] rounded-full bg-[#C9A96E]" />
-
                   추천{' '}
-                  {
-                    summary.items
-                      .length
-                  }
+                  {summary.items.length}
                   개
                 </span>
               </>
@@ -911,12 +1189,12 @@ function ReportCard({
         </div>
       </button>
 
-      {/* 대화 펼침 */}
       {isOpen && (
         <div
           className="border-t-[0.7px] px-[10px] pb-[16px] pt-[16px]"
           style={{
-            borderTopColor: '#1E1E1E',
+            borderTopColor:
+              '#1E1E1E',
           }}
         >
           <p
@@ -969,7 +1247,8 @@ function ReportCard({
                 type="button"
                 onClick={() =>
                   onRetryGarment(
-                    summary.items[0].garmentId,
+                    summary.items[0]
+                      .garmentId,
                   )
                 }
                 className="flex h-[39.4px] flex-1 items-center justify-center gap-[5px] rounded-[4px] bg-[#C9A96E] text-[#0D0A05]"
@@ -1020,8 +1299,10 @@ function AssistantMessage({
       <div
         className="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-[6px] border-[0.7px]"
         style={{
-          borderColor: 'rgba(201, 169, 110, 0.28)',
-          backgroundColor: 'rgba(201, 169, 110, 0.12)',
+          borderColor:
+            'rgba(201, 169, 110, 0.28)',
+          backgroundColor:
+            'rgba(201, 169, 110, 0.12)',
         }}
       >
         <AssistantIcon className="h-[16px] w-[16px] text-[#C9A96E]" />
@@ -1052,8 +1333,10 @@ function UserMessage({
       <div
         className="max-w-[253px] rounded-[10px] border-[0.7px] px-[10px] py-[8px]"
         style={{
-          borderColor: 'rgba(201, 169, 110, 0.28)',
-          backgroundColor: 'rgba(201, 169, 110, 0.10)',
+          borderColor:
+            'rgba(201, 169, 110, 0.28)',
+          backgroundColor:
+            'rgba(201, 169, 110, 0.10)',
         }}
       >
         <p
@@ -1121,6 +1404,35 @@ function StatCard({
 /* ==================================================== */
 /* HELPER                                               */
 /* ==================================================== */
+
+function formatGarmentCategory(
+  category: string,
+) {
+  const normalized = category
+    .trim()
+    .toLowerCase();
+
+  const labels: Record<
+    string,
+    string
+  > = {
+    top: '상의',
+    tops: '상의',
+    upper: '상의',
+    shirt: '상의',
+    shirts: '상의',
+    jacket: '상의',
+    outer: '상의',
+
+    bottom: '하의',
+    bottoms: '하의',
+    pants: '하의',
+    trousers: '하의',
+    skirt: '하의',
+  };
+
+  return labels[normalized] ?? category;
+}
 
 function getConversationMetadata(
   messages: StoredMessage[],
@@ -1241,7 +1553,6 @@ function StatusBox({
 /* ICON                                                 */
 /* ==================================================== */
 
-
 function HeartIcon({
   className,
 }: {
@@ -1346,7 +1657,6 @@ function SettingsIcon({
   );
 }
 
-/* 기존 VoiceAssistant 원본 */
 function AssistantIcon({
   className,
 }: {
