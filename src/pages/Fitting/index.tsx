@@ -253,12 +253,16 @@ const Fitting = () => {
     ).length;
 
   const heatmapAvailable =
+    Boolean(selectedSizeDetail?.modelUrl) &&
     Boolean(selectedSizeDetail?.easeUrl) &&
     vertexEase.length > 0;
 
   const canRenderViewer =
     Boolean(glbUrl) &&
-    Boolean(selectedSizeDetail?.modelUrl);
+    (
+      selectedGarmentId === null ||
+      Boolean(selectedSizeDetail?.modelUrl)
+    );
 
   /*
    * 저장된 아바타 목록
@@ -607,6 +611,8 @@ const Fitting = () => {
   const handleSelectGarment = (
     garmentId: number,
   ) => {
+    setActivePickerMode('garment');
+
     if (
       garmentId ===
       selectedGarmentId
@@ -631,6 +637,7 @@ const Fitting = () => {
     }
 
     setSelectedSize(size);
+    setPickerSheet(null);
   };
 
   const getAvatarMeta = (
@@ -685,24 +692,26 @@ const Fitting = () => {
     }
 
     if (selectedGarmentId === null) {
-      /*
-       * ThreeViewer는 현재 garmentUrl이 없을 때
-       * 더미 모델을 기본값으로 사용하므로,
-       * 뷰어 컴포넌트를 수정하기 전까지는
-       * 의류 미선택 상태에서 3D를 렌더링하지 않습니다.
-       */
+      if (!glbUrl) {
+        return (
+          <div className="flex h-full items-center justify-center px-8 text-center">
+            <p
+              className="text-[13px] leading-[20px] text-[#686868]"
+              style={{
+                fontFamily:
+                  'Inter, sans-serif',
+              }}
+            >
+              아바타 3D 데이터를 불러올 수 없습니다.
+            </p>
+          </div>
+        );
+      }
+
       return (
-        <div className="flex h-full items-center justify-center px-6 text-center">
-          <p
-            className="text-[15px] font-normal leading-[23px] text-[#343434]"
-            style={{
-              fontFamily:
-                'Inter, sans-serif',
-            }}
-          >
-            의류를 선택하세요
-          </p>
-        </div>
+        <ThreeViewer
+          avatarUrl={glbUrl}
+        />
       );
     }
 
@@ -750,23 +759,36 @@ const Fitting = () => {
       );
     }
 
-    if (
-      !glbUrl ||
-      !selectedSizeDetail?.modelUrl
-    ) {
+    if (!glbUrl) {
       return (
         <div className="flex h-full items-center justify-center px-8 text-center">
           <p
             className="text-[13px] leading-[20px] text-[#686868]"
             style={{
-              fontFamily:
-                'Inter, sans-serif',
+              fontFamily: 'Inter, sans-serif',
             }}
           >
-            {!glbUrl
-              ? '아바타 3D 데이터를 불러올 수 없습니다.'
-              : '선택한 사이즈의 3D 착용 모델이 없습니다.'}
+            아바타 3D 데이터를 불러올 수 없습니다.
           </p>
+        </div>
+      );
+    }
+
+    if (!selectedSizeDetail?.modelUrl) {
+      return (
+        <div className="relative h-full w-full">
+          <ThreeViewer avatarUrl={glbUrl} />
+
+          <div className="pointer-events-none absolute bottom-[42px] left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-[6px] bg-black/70 px-[10px] py-[6px]">
+            <p
+              className="text-[10px] text-[#77736D]"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+              }}
+            >
+              선택한 사이즈의 3D 착용 모델이 없습니다.
+            </p>
+          </div>
         </div>
       );
     }
@@ -789,9 +811,9 @@ const Fitting = () => {
     <main className="min-h-screen bg-[#080808]">
       <div className="mx-auto min-h-screen w-[402px] max-w-full overflow-hidden bg-[#080808] pb-[18px] text-white">
         {/* 브랜드 헤더 */}
-        <header className="flex h-[58px] items-center border-b border-white/[0.07] px-[20px]">
+        <header className="flex h-[46px] items-center border-b border-white/10 bg-[#080808] px-[14px]">
           <span
-            className="text-[20px] font-bold leading-[30px] tracking-[1.2px] text-[#F0EBE2]"
+            className="text-[20px] font-normal leading-[30px] tracking-[1.2px] text-[#F0EBE2]"
             style={{
               fontFamily:
                 '"DM Serif Display", serif',
@@ -959,9 +981,7 @@ const Fitting = () => {
                     '"DM Mono", monospace',
                 }}
               >
-                {formatGarmentCategory(
-                  selectedGarment.category,
-                )}
+                MCM
               </p>
 
               <p
@@ -989,6 +1009,227 @@ const Fitting = () => {
             </div>
           )}
         </section>
+
+    
+
+
+        
+          {/* <section className="px-[19px] pb-[18px] pt-[4px]">
+            {fittingResult &&
+              selectedGarment &&
+              selectedSize &&
+              selectedSizeDetail && (
+                <div className="overflow-hidden rounded-[14px] border border-white/[0.07] bg-[#141414]">
+
+                  <div className="border-b border-white/[0.07] px-[17px] py-[16px]">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p
+                          className="text-[9px] font-normal uppercase tracking-[1.3px] text-[#6C6862]"
+                          style={{
+                            fontFamily:
+                              '"DM Mono", monospace',
+                          }}
+                        >
+                          FITTING RESULT
+                        </p>
+
+                        <p
+                          className="mt-[7px] truncate text-[14px] font-medium text-[#F0EBE2]"
+                          style={{
+                            fontFamily:
+                              'Inter, sans-serif',
+                          }}
+                        >
+                          {selectedGarment.name}
+                        </p>
+
+                        <p
+                          className="mt-[3px] text-[10px] text-[#77736D]"
+                          style={{
+                            fontFamily:
+                              'Inter, sans-serif',
+                          }}
+                        >
+                          {formatGarmentCategory(
+                            selectedGarment.category,
+                          )}
+                        </p>
+                      </div>
+
+                      <span
+                        className="shrink-0 rounded-[5px] border border-[#C9B27A]/30 bg-[#2A251B] px-[8px] py-[5px] text-[9px] font-medium text-[#C9B27A]"
+                        style={{
+                          fontFamily:
+                            'Inter, sans-serif',
+                        }}
+                      >
+                        추천
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="px-[17px] py-[18px]">
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <p
+                          className="text-[10px] font-normal text-[#77736D]"
+                          style={{
+                            fontFamily:
+                              'Inter, sans-serif',
+                          }}
+                        >
+                          추천 사이즈
+                        </p>
+
+                        <div className="mt-[3px] flex items-end gap-[7px]">
+                          <span
+                            className="text-[34px] font-semibold leading-none text-[#C9B27A]"
+                            style={{
+                              fontFamily:
+                                'Inter, sans-serif',
+                            }}
+                          >
+                            {fittingResult.recommendedSize.toUpperCase()}
+                          </span>
+
+                          <span
+                            className="pb-[2px] text-[10px] text-[#65615C]"
+                            style={{
+                              fontFamily:
+                                '"DM Mono", monospace',
+                            }}
+                          >
+                            RECOMMENDED
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <p
+                          className="text-[9px] text-[#625F5A]"
+                          style={{
+                            fontFamily:
+                              '"DM Mono", monospace',
+                          }}
+                        >
+                          SELECTED SIZE
+                        </p>
+
+                        <p
+                          className="mt-[3px] text-[14px] font-medium text-[#F0EBE2]"
+                          style={{
+                            fontFamily:
+                              'Inter, sans-serif',
+                          }}
+                        >
+                          {selectedSize.toUpperCase()}
+                        </p>
+                      </div>
+                    </div>
+
+                    {fittingResult.recommendationReason && (
+                      <p
+                        className="mt-[15px] rounded-[8px] bg-[#101010] px-[12px] py-[10px] text-[11px] leading-[18px] text-[#8B8781]"
+                        style={{
+                          fontFamily:
+                            'Inter, sans-serif',
+                        }}
+                      >
+                        {
+                          fittingResult.recommendationReason
+                        }
+                      </p>
+                    )}
+                  </div>
+
+                  {selectedSizeDetail.parts.length >
+                    0 && (
+                    <div className="border-t border-white/[0.07] px-[17px] py-[17px]">
+                      <div className="mb-[12px] flex items-center justify-between">
+                        <p
+                          className="text-[11px] font-medium text-[#E5E0D8]"
+                          style={{
+                            fontFamily:
+                              'Inter, sans-serif',
+                          }}
+                        >
+                          부위별 핏
+                        </p>
+
+                        <span
+                          className="text-[8px] tracking-[1px] text-[#5D5954]"
+                          style={{
+                            fontFamily:
+                              '"DM Mono", monospace',
+                          }}
+                        >
+                          FIT DETAIL
+                        </span>
+                      </div>
+
+                      <div className="divide-y divide-white/[0.05]">
+                        {selectedSizeDetail.parts.map(
+                          (part) => (
+                            <div
+                              key={part.part}
+                              className="flex min-h-[39px] items-center"
+                            >
+                              <div className="flex min-w-0 flex-1 items-center gap-[8px]">
+                                <span
+                                  className="h-[7px] w-[7px] shrink-0 rounded-[2px]"
+                                  style={{
+                                    backgroundColor:
+                                      part.color,
+                                  }}
+                                />
+
+                                <span
+                                  className="truncate text-[11px] text-[#BBB6AE]"
+                                  style={{
+                                    fontFamily:
+                                      'Inter, sans-serif',
+                                  }}
+                                >
+                                  {part.part}
+                                </span>
+                              </div>
+
+                              <span
+                                className="mx-[10px] text-[10px] text-[#77736D]"
+                                style={{
+                                  fontFamily:
+                                    'Inter, sans-serif',
+                                }}
+                              >
+                                {part.verdict}
+                              </span>
+
+                              <span
+                                className="w-[52px] text-right text-[10px] text-[#9D9891]"
+                                style={{
+                                  fontFamily:
+                                    '"DM Mono", monospace',
+                                }}
+                              >
+                                {part.actualEase > 0
+                                  ? '+'
+                                  : ''}
+                                {part.actualEase.toFixed(
+                                  1,
+                                )}
+                                cm
+                              </span>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+          </section> */}
+         
       </div>
 
       <VoiceAssistant
@@ -1260,7 +1501,7 @@ const Fitting = () => {
                 </span>
               </div>
 
-              <div className="max-h-[calc(79dvh-78px)] overflow-y-auto px-[18px] pb-[30px]">
+              <div className="max-h-[calc(79dvh-78px)] overflow-y-auto px-[18px] pb-[30px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {isGarmentsLoading && (
                   <SheetMessage>
                     의류 목록을
@@ -1329,7 +1570,7 @@ const Fitting = () => {
                                 )
                               }
                               className={[
-                                'flex min-h-[95px] w-full items-center rounded-[13px] border px-[16px] py-[13px] text-left transition',
+                                'flex min-h-[95px] w-full items-center rounded-[13px] border px-[16px] py-[13px] text-left outline-none transition',
                                 isSelected
                                   ? 'border-[#C9A96E] bg-[#2A251B]'
                                   : 'border-white/[0.07] bg-[#191919]',
@@ -1362,7 +1603,7 @@ const Fitting = () => {
                                         '"DM Mono", monospace',
                                     }}
                                   >
-                                    CLOSR
+                                    MCM
                                   </span>
 
                                   <span
@@ -1584,21 +1825,38 @@ function AvatarSilhouetteIcon({
 }) {
   return (
     <svg
-      viewBox="0 0 32 42"
+      width="20"
+      height="32"
+      viewBox="0 0 20 32"
       fill="none"
+      xmlns="http://www.w3.org/2000/svg"
       className={className}
       aria-hidden="true"
     >
-      <circle
-        cx="16"
-        cy="7"
-        r="5"
-        fill="currentColor"
-      />
-      <path
-        d="M10.5 13.5C8.4 15.2 7.2 18 7 21.2L6.2 31H12L13 41H19L20 31H25.8L25 21.2C24.8 18 23.6 15.2 21.5 13.5C19.8 12.1 12.2 12.1 10.5 13.5Z"
-        fill="currentColor"
-      />
+      <g clipPath="url(#avatar-silhouette-clip)">
+        <path
+          d="M9.99511 9.00096C12.7552 9.00096 14.9927 6.76348 14.9927 4.00341C14.9927 1.24334 12.7552 -0.994141 9.99511 -0.994141C7.23504 -0.994141 4.99756 1.24334 4.99756 4.00341C4.99756 6.76348 7.23504 9.00096 9.99511 9.00096Z"
+          fill="#3A3A3A"
+        />
+        <path
+          d="M2.99853 10.0005L0.999512 19.9956H18.9907L16.9917 10.0005L12.9936 8.00146L9.9951 9.00097L6.99657 8.00146L2.99853 10.0005Z"
+          fill="#3A3A3A"
+        />
+        <path
+          d="M2.99853 19.9956L1.99902 29.9907H7.99608L9.9951 23.9936L11.9941 29.9907H17.9912L16.9917 19.9956H2.99853Z"
+          fill="#2E2E2E"
+        />
+      </g>
+
+      <defs>
+        <clipPath id="avatar-silhouette-clip">
+          <rect
+            width="19.9902"
+            height="31.9954"
+            fill="white"
+          />
+        </clipPath>
+      </defs>
     </svg>
   );
 }
