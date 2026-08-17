@@ -15,6 +15,7 @@ import {
   fetchSummary,
   getStoredFittingConversationIds,
 } from '@/api/myChat';
+import { getMyLikes } from '@/api/like';
 
 import type {
   ChatSummary,
@@ -52,6 +53,15 @@ const My = () => {
   } = useQuery({
     queryKey: ['garments'],
     queryFn: getGarments,
+  });
+
+  const {
+    data: likedGarments = [],
+    isLoading: isLikesLoading,
+    isError: isLikesError,
+  } = useQuery({
+    queryKey: ['my-likes'],
+    queryFn: getMyLikes,
   });
 
   const fittings =
@@ -407,6 +417,94 @@ const My = () => {
                   )}
                 </div>
               )}
+
+            {/* ============================================ */}
+            {/* LIKED GARMENTS                               */}
+            {/* ============================================ */}
+
+            <div className="mt-[28px]">
+              <h2
+                className="px-[20px] text-[11px] font-semibold leading-[16.5px] tracking-[1.32px] text-[#9A9490]"
+                style={{
+                  fontFamily:
+                    'Inter, sans-serif',
+                }}
+              >
+                찜한 의류
+              </h2>
+
+              {isLikesLoading && (
+                <p
+                  className="mt-[12px] px-[20px] text-[11px] font-normal leading-[16.5px] text-[#9A9490]"
+                  style={{
+                    fontFamily:
+                      'Inter, sans-serif',
+                  }}
+                >
+                  찜한 의류를 불러오는 중입니다.
+                </p>
+              )}
+
+              {isLikesError && (
+                <p
+                  className="mt-[12px] px-[20px] text-[11px] font-normal leading-[16.5px] text-[#9A9490]"
+                  style={{
+                    fontFamily:
+                      'Inter, sans-serif',
+                  }}
+                >
+                  찜한 의류를 불러오지 못했습니다.
+                </p>
+              )}
+
+              {!isLikesLoading &&
+                !isLikesError &&
+                likedGarments.length ===
+                  0 && (
+                  <p
+                    className="mt-[12px] px-[20px] text-[11px] font-normal leading-[16.5px] text-[#9A9490]"
+                    style={{
+                      fontFamily:
+                        'Inter, sans-serif',
+                    }}
+                  >
+                    아직 찜한 의류가 없습니다.
+                  </p>
+                )}
+
+              {!isLikesLoading &&
+                !isLikesError &&
+                likedGarments.length >
+                  0 && (
+                  <div className="mt-[12px] flex w-full gap-[8px] overflow-x-auto px-[20px] pb-[4px] [&::-webkit-scrollbar]:hidden">
+                    {likedGarments.map(
+                      (garment) => (
+                        <button
+                          key={
+                            garment.garmentId
+                          }
+                          type="button"
+                          className="flex h-[30px] shrink-0 items-center gap-[5px] rounded-[20px] border-[0.71px] border-white/[0.07] bg-[#141414] px-[12px] py-[6px]"
+                        >
+                          <HeartIcon className="h-[17px] w-[17px] shrink-0 text-[#F87171]" />
+
+                          <span
+                            className="whitespace-nowrap text-[11px] font-normal leading-[16.5px] text-[#9A9490]"
+                            style={{
+                              fontFamily:
+                                'Inter, sans-serif',
+                            }}
+                          >
+                            {
+                              garment.name
+                            }
+                          </span>
+                        </button>
+                      ),
+                    )}
+                  </div>
+                )}
+            </div>
           </section>
         )}
 
@@ -1142,6 +1240,30 @@ function StatusBox({
 /* ==================================================== */
 /* ICON                                                 */
 /* ==================================================== */
+
+
+function HeartIcon({
+  className,
+}: {
+  className?: string;
+}) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 function BellIcon({
   className,
