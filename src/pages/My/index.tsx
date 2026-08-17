@@ -71,10 +71,6 @@ const My = () => {
     queryFn: getGarments,
   });
 
-  /* ================================================== */
-  /* 찜한 의류                                          */
-  /* ================================================== */
-
   const {
     data: likedGarments = [],
     isLoading: isLikesLoading,
@@ -553,8 +549,7 @@ const My = () => {
                       'Inter, sans-serif',
                   }}
                 >
-                  찜한 의류를 불러오는
-                  중입니다.
+                  찜한 의류를 불러오는 중입니다.
                 </p>
               )}
 
@@ -566,8 +561,7 @@ const My = () => {
                       'Inter, sans-serif',
                   }}
                 >
-                  찜한 의류를 불러오지
-                  못했습니다.
+                  찜한 의류를 불러오지 못했습니다.
                 </p>
               )}
 
@@ -582,8 +576,7 @@ const My = () => {
                         'Inter, sans-serif',
                     }}
                   >
-                    아직 찜한 의류가
-                    없습니다.
+                    아직 찜한 의류가 없습니다.
                   </p>
                 )}
 
@@ -635,6 +628,7 @@ const My = () => {
         {activeTab ===
           'report' && (
           <section className="px-[24px] pb-[120px] pt-[16px]">
+            {/* 통계 */}
             <div className="grid h-[62px] grid-cols-3 gap-[8px]">
               <StatCard
                 label="총 대화"
@@ -666,7 +660,9 @@ const My = () => {
               {isReportLoading &&
                 reports.length >
                   0 && (
-                  <StatusBox fullWidth>
+                  <StatusBox
+                    fullWidth
+                  >
                     상담 리포트를
                     불러오는 중입니다.
                   </StatusBox>
@@ -675,7 +671,9 @@ const My = () => {
               {!isReportLoading &&
                 reports.length ===
                   0 && (
-                  <StatusBox fullWidth>
+                  <StatusBox
+                    fullWidth
+                  >
                     아직 AI 상담 기록이
                     없습니다.
                   </StatusBox>
@@ -754,6 +752,7 @@ const My = () => {
           </section>
         )}
       </div>
+    
 
       {/* ============================================ */}
       {/* LIKED GARMENT BOTTOM SHEET                   */}
@@ -777,7 +776,6 @@ const My = () => {
             >
               <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-white/20" />
 
-              {/* 찜 취소 */}
               <button
                 type="button"
                 aria-label="찜 취소"
@@ -845,8 +843,8 @@ const My = () => {
 
                   {isSelectedGarmentLoading && (
                     <p className="mt-2 text-[12px] text-[#9A9490]">
-                      상품 정보를
-                      불러오는 중입니다.
+                      상품 정보를 불러오는
+                      중입니다.
                     </p>
                   )}
 
@@ -922,7 +920,7 @@ const My = () => {
           </div>,
           document.body,
         )}
-    </main>
+</main>
   );
 };
 
@@ -951,13 +949,29 @@ function FittingCard({
   thumbnailUrl,
   onRetry,
 }: FittingCardProps) {
+  const {
+    data: garmentDetail,
+    isLoading: isGarmentDetailLoading,
+  } = useQuery({
+    queryKey: [
+      'garment-detail',
+      fitting.garmentId,
+    ],
+    queryFn: () =>
+      getGarmentDetail(
+        fitting.garmentId,
+      ),
+  });
+
   return (
     <article className="h-[285px] w-[185px] overflow-hidden rounded-[8px] border-[0.7px] border-white/[0.07] bg-[#141414]">
       <div className="relative h-[180px] w-[184px] overflow-hidden bg-[#F3F3F3]">
         {thumbnailUrl ? (
           <img
             src={thumbnailUrl}
-            alt={fitting.garmentName}
+            alt={
+              fitting.garmentName
+            }
             className="h-full w-full object-contain"
           />
         ) : (
@@ -1045,8 +1059,32 @@ function FittingCard({
 
           <button
             type="button"
-            disabled
-            className="h-[31px] w-[66px] rounded-[4px] border-[0.7px] border-white/[0.07] text-[10px] font-normal leading-[15px] text-[#9A9490]"
+            disabled={
+              isGarmentDetailLoading ||
+              !garmentDetail?.purchaseUrl
+            }
+            onClick={() => {
+              const purchaseUrl =
+                garmentDetail
+                  ?.purchaseUrl;
+
+              if (!purchaseUrl) {
+                return;
+              }
+
+              window.open(
+                purchaseUrl,
+                '_blank',
+                'noopener,noreferrer',
+              );
+            }}
+            className={[
+              'h-[31px] w-[66px] rounded-[4px] border-[0.7px] border-white/[0.07] text-[10px] font-normal leading-[15px]',
+              isGarmentDetailLoading ||
+              !garmentDetail?.purchaseUrl
+                ? 'cursor-not-allowed text-[#9A9490]'
+                : 'text-[#C9A96E]',
+            ].join(' ')}
             style={{
               fontFamily:
                 'Inter, sans-serif',
@@ -1091,6 +1129,38 @@ function ReportCard({
     summary.headline ??
     'AI 피팅 상담';
 
+  const recommendedGarmentId =
+    summary.items[0]?.garmentId ??
+    null;
+
+  const {
+    data: recommendedGarmentDetail,
+    isLoading:
+      isRecommendedGarmentLoading,
+  } = useQuery({
+    queryKey: [
+      'garment-detail',
+      recommendedGarmentId,
+    ],
+    queryFn: () => {
+      if (
+        recommendedGarmentId ===
+        null
+      ) {
+        throw new Error(
+          '추천 의류가 없습니다.',
+        );
+      }
+
+      return getGarmentDetail(
+        recommendedGarmentId,
+      );
+    },
+    enabled:
+      recommendedGarmentId !==
+      null,
+  });
+
   return (
     <article
       className="w-[353px] overflow-hidden rounded-[12px] border-[0.7px] bg-[#141414]"
@@ -1100,6 +1170,7 @@ function ReportCard({
           : 'rgba(255, 255, 255, 0.07)',
       }}
     >
+      {/* 카드 상단 */}
       <button
         type="button"
         onClick={onToggle}
@@ -1108,10 +1179,8 @@ function ReportCard({
         <div
           className="flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-[8px] border-[0.7px]"
           style={{
-            borderColor:
-              'rgba(201, 169, 110, 0.28)',
-            backgroundColor:
-              'rgba(201, 169, 110, 0.12)',
+            borderColor: 'rgba(201, 169, 110, 0.28)',
+            backgroundColor: 'rgba(201, 169, 110, 0.12)',
           }}
         >
           <AssistantIcon className="h-[24px] w-[24px] text-[#C9A96E]" />
@@ -1179,8 +1248,12 @@ function ReportCard({
 
                 <span className="flex items-center gap-[4px] text-[#C9A96E]">
                   <span className="h-[5px] w-[5px] rounded-full bg-[#C9A96E]" />
+
                   추천{' '}
-                  {summary.items.length}
+                  {
+                    summary.items
+                      .length
+                  }
                   개
                 </span>
               </>
@@ -1189,12 +1262,12 @@ function ReportCard({
         </div>
       </button>
 
+      {/* 대화 펼침 */}
       {isOpen && (
         <div
           className="border-t-[0.7px] px-[10px] pb-[16px] pt-[16px]"
           style={{
-            borderTopColor:
-              '#1E1E1E',
+            borderTopColor: '#1E1E1E',
           }}
         >
           <p
@@ -1247,8 +1320,7 @@ function ReportCard({
                 type="button"
                 onClick={() =>
                   onRetryGarment(
-                    summary.items[0]
-                      .garmentId,
+                    summary.items[0].garmentId,
                   )
                 }
                 className="flex h-[39.4px] flex-1 items-center justify-center gap-[5px] rounded-[4px] bg-[#C9A96E] text-[#0D0A05]"
@@ -1268,8 +1340,34 @@ function ReportCard({
 
               <button
                 type="button"
-                disabled
-                className="h-[39.4px] flex-1 rounded-[4px] border-[0.7px] border-white/[0.07] bg-transparent text-[12px] font-normal leading-[18px] text-[#9A9490]"
+                disabled={
+                  isRecommendedGarmentLoading ||
+                  !recommendedGarmentDetail
+                    ?.purchaseUrl
+                }
+                onClick={() => {
+                  const purchaseUrl =
+                    recommendedGarmentDetail
+                      ?.purchaseUrl;
+
+                  if (!purchaseUrl) {
+                    return;
+                  }
+
+                  window.open(
+                    purchaseUrl,
+                    '_blank',
+                    'noopener,noreferrer',
+                  );
+                }}
+                className={[
+                  'h-[39.4px] flex-1 rounded-[4px] border-[0.7px] border-white/[0.07] bg-transparent text-[12px] font-normal leading-[18px]',
+                  isRecommendedGarmentLoading ||
+                  !recommendedGarmentDetail
+                    ?.purchaseUrl
+                    ? 'cursor-not-allowed text-[#9A9490]'
+                    : 'text-[#C9A96E]',
+                ].join(' ')}
                 style={{
                   fontFamily:
                     'Inter, sans-serif',
@@ -1299,10 +1397,8 @@ function AssistantMessage({
       <div
         className="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-[6px] border-[0.7px]"
         style={{
-          borderColor:
-            'rgba(201, 169, 110, 0.28)',
-          backgroundColor:
-            'rgba(201, 169, 110, 0.12)',
+          borderColor: 'rgba(201, 169, 110, 0.28)',
+          backgroundColor: 'rgba(201, 169, 110, 0.12)',
         }}
       >
         <AssistantIcon className="h-[16px] w-[16px] text-[#C9A96E]" />
@@ -1333,10 +1429,8 @@ function UserMessage({
       <div
         className="max-w-[253px] rounded-[10px] border-[0.7px] px-[10px] py-[8px]"
         style={{
-          borderColor:
-            'rgba(201, 169, 110, 0.28)',
-          backgroundColor:
-            'rgba(201, 169, 110, 0.10)',
+          borderColor: 'rgba(201, 169, 110, 0.28)',
+          backgroundColor: 'rgba(201, 169, 110, 0.10)',
         }}
       >
         <p
@@ -1429,6 +1523,8 @@ function formatGarmentCategory(
     pants: '하의',
     trousers: '하의',
     skirt: '하의',
+
+    dress: '원피스',
   };
 
   return labels[normalized] ?? category;
@@ -1553,6 +1649,7 @@ function StatusBox({
 /* ICON                                                 */
 /* ==================================================== */
 
+
 function HeartIcon({
   className,
 }: {
@@ -1657,6 +1754,7 @@ function SettingsIcon({
   );
 }
 
+/* 기존 VoiceAssistant 원본 */
 function AssistantIcon({
   className,
 }: {
