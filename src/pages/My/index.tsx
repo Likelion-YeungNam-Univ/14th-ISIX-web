@@ -11,6 +11,7 @@ import {
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 
+import { getMyAvatars } from '@/api/avatar';
 import { getMyFittings } from '@/api/fitting';
 import {
   getGarmentDetail,
@@ -31,6 +32,7 @@ import type {
   StoredMessage,
 } from '@/types/chat';
 import type { LikedGarment } from '@/types/like';
+import { getCurrentAvatar } from '@/utils/avatarStorage';
 
 type MyTab = 'fitting' | 'report';
 
@@ -70,6 +72,52 @@ const My = () => {
     queryKey: ['garments'],
     queryFn: getGarments,
   });
+
+  const {
+    data: avatars = [],
+    isLoading: isAvatarsLoading,
+    isError: isAvatarsError,
+  } = useQuery({
+    queryKey: ['my-avatars'],
+    queryFn: getMyAvatars,
+  });
+
+  const currentAvatarId =
+    getCurrentAvatar()?.avatarId ?? null;
+
+  const profileAvatar =
+    avatars.find(
+      (avatar) =>
+        avatar.status === 'done' &&
+        avatar.avatarId === currentAvatarId,
+    ) ??
+    avatars.find(
+      (avatar) =>
+        avatar.status === 'done',
+    ) ??
+    null;
+
+  const profileMeta = [
+    profileAvatar?.bodyTypeLabel ||
+      null,
+
+    profileAvatar?.height != null
+      ? `${Math.round(
+          profileAvatar.height,
+        )}cm`
+      : null,
+
+    profileAvatar?.weight != null
+      ? `${Math.round(
+          profileAvatar.weight,
+        )}kg`
+      : null,
+  ]
+    .filter(
+      (value): value is string =>
+        Boolean(value),
+    )
+    .join(' · ');
 
   const {
     data: likedGarments = [],
@@ -335,15 +383,12 @@ const My = () => {
                   '"DM Mono", monospace',
               }}
             >
-              모래시계형
-              <span className="mx-[7px]">
-                ·
-              </span>
-              168cm
-              <span className="mx-[7px]">
-                ·
-              </span>
-              54kg
+              {isAvatarsLoading
+                ? '불러오는 중...'
+                : isAvatarsError
+                  ? '아바타 정보 없음'
+                  : profileMeta ||
+                    '아바타 정보 없음'}
             </p>
           </div>
 
