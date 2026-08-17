@@ -184,7 +184,7 @@ const Avatar = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/upload')}
-                  className="mt-[14px] h-[40px] w- full rounded-[10px] bg-[#C9A96E] text-[13px] font-semibold text-[#0D0A05]"
+                  className="mt-[14px] h-[40px] w-full rounded-[10px] bg-[#C9A96E] text-[13px] font-semibold text-[#0D0A05]"
                   style={{
                     fontFamily: 'Inter, sans-serif',
                   }}>
@@ -210,7 +210,7 @@ const Avatar = () => {
                     disabled={!isSelectable}
                     onClick={()=> handleSelectAvatar(item)}
                     className={[
-                      'flex w-[84px] shrink-0 flex-col items-center gap-[8px] rounded-[16px] border-[0.714px] px-[14px] tramsition-colors',
+                      'flex w-[84px] shrink-0 flex-col items-center gap-[8px] rounded-[16px] border-[0.714px] px-[14px] transition-colors',
                       isSelected ? 'border-[#C9A96E] bg-[#C9A96E]/10'
                       : 'border-white/10	bg-[#141414]',
 											isSelectable ?	'cursor-pointer'
@@ -221,7 +221,7 @@ const Avatar = () => {
                         isSelected? 'text-[#C9A96E]'
                         :'text-[#5C5850]',
                       ].join(' ')}>
-                        <PersonIcon className="h=[26px] w-[26px]"/>
+                        <PersonIcon className="h-[26px] w-[26px]"/>
                       </span>
                       
                       <div className="flex flex-col items-center gap-[2px]">
@@ -256,7 +256,7 @@ const Avatar = () => {
               </section>
             ) : (
               <>
-                <section className='mt-[16px] flex gap-[14px] rounded-[16px] border-[0.714px] border-white/10 bt=[#141414] p-[14px]'>
+                <section className='mt-[16px] flex gap-[14px] rounded-[16px] border-[0.714px] border-white/10 bg-[#141414] p-[14px]'>
                   <div className='h-[168px] w-[110px] shrink-0 overflow-hidden rounded-[12px] border-[0.714px] border-white/10 bg-[#0D0D0D]'>
                     {avatar.glbUrl ? (
                       <ThreeViewer avatarUrl={avatar.glbUrl}/>
@@ -312,7 +312,7 @@ const Avatar = () => {
                         스캔 정확도
                       </span>
                       <span
-                        className="text-[13px] font-medi text-[#C9A96E]"
+                        className="text-[13px] font-medium text-[#C9A96E]"
                         style={{ fontFamily: '"DM Mono", monospace' }}
                       >
                         {MOCK_SCAN_ACCURACY}%
@@ -337,7 +337,7 @@ const Avatar = () => {
                   </div>
                 </section>
 
-                <section className="mt=[20px]">
+                <section className="mt-[20px]">
                   <h2 className="text-[10px] font-semibold text-[#9A9490]"
                   style={{ fontFamily : 'Inter, sans-serif'}}>
                     신체 지수
