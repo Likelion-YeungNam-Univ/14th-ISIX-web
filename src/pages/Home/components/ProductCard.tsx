@@ -7,6 +7,7 @@ import {
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 
+import { getGarmentDetail } from '@/api/garment';
 import {
   getMyLikes,
   likeGarment,
@@ -41,6 +42,8 @@ export const formatGarmentCategory = (
     pants: '하의',
     trousers: '하의',
     skirt: '하의',
+
+    dress: '원피스',
   };
 
   return labels[normalized] ?? category;
@@ -49,6 +52,12 @@ export const formatGarmentCategory = (
 const ProductCard = ({ garment }: Props) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const [imageFailed, setImageFailed] =
+    useState(false);
+
+  const [isActionOpen, setIsActionOpen] =
+    useState(false);
 
   /* ================================================== */
   /* 찜 상태                                             */
@@ -152,14 +161,27 @@ const ProductCard = ({ garment }: Props) => {
   });
 
   /* ================================================== */
-  /* 카드 상태                                           */
+  /* 의류 상세 / 구매 링크                              */
   /* ================================================== */
 
-  const [imageFailed, setImageFailed] =
-    useState(false);
+  const {
+    data: garmentDetail,
+    isLoading: isGarmentDetailLoading,
+  } = useQuery({
+    queryKey: [
+      'garment-detail',
+      garment.garmentId,
+    ],
+    queryFn: () =>
+      getGarmentDetail(
+        garment.garmentId,
+      ),
+    enabled: isActionOpen,
+  });
 
-  const [isActionOpen, setIsActionOpen] =
-    useState(false);
+  /* ================================================== */
+  /* 카드 정보                                           */
+  /* ================================================== */
 
   const showImage =
     Boolean(garment.thumbnailUrl) &&
@@ -358,8 +380,34 @@ const ProductCard = ({ garment }: Props) => {
 
                 <button
                   type="button"
-                  disabled
-                  className="h-12 cursor-not-allowed rounded-[10px] bg-[#C9A96E] text-sm font-medium text-[#141414] opacity-50"
+                  disabled={
+                    isGarmentDetailLoading ||
+                    !garmentDetail
+                      ?.purchaseUrl
+                  }
+                  onClick={() => {
+                    const purchaseUrl =
+                      garmentDetail
+                        ?.purchaseUrl;
+
+                    if (!purchaseUrl) {
+                      return;
+                    }
+
+                    window.open(
+                      purchaseUrl,
+                      '_blank',
+                      'noopener,noreferrer',
+                    );
+                  }}
+                  className={[
+                    'h-12 rounded-[10px] bg-[#C9A96E] text-sm font-medium text-[#141414]',
+                    isGarmentDetailLoading ||
+                    !garmentDetail
+                      ?.purchaseUrl
+                      ? 'cursor-not-allowed opacity-50'
+                      : '',
+                  ].join(' ')}
                 >
                   구매하기
                 </button>
