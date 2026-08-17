@@ -3,28 +3,42 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  useMutation,
   useQueries,
   useQuery,
+  useQueryClient,
 } from '@tanstack/react-query';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 
+import { getMyAvatars } from '@/api/avatar';
 import { getMyFittings } from '@/api/fitting';
-import { getGarments } from '@/api/garment';
+import {
+  getGarmentDetail,
+  getGarments,
+} from '@/api/garment';
 import {
   fetchHistory,
   fetchSummary,
   getStoredFittingConversationIds,
 } from '@/api/myChat';
+import {
+  getMyLikes,
+  unlikeGarment,
+} from '@/api/like';
 
 import type {
   ChatSummary,
   StoredMessage,
 } from '@/types/chat';
+import type { LikedGarment } from '@/types/like';
+import { getCurrentAvatar } from '@/utils/avatarStorage';
 
 type MyTab = 'fitting' | 'report';
 
 const My = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] =
     useState<MyTab>('fitting');
@@ -33,6 +47,11 @@ const My = () => {
     openReportId,
     setOpenReportId,
   ] = useState<string | null>(null);
+
+  const [
+    selectedLikedGarmentId,
+    setSelectedLikedGarmentId,
+  ] = useState<number | null>(null);
 
   /* ================================================== */
   /* 저장된 피팅                                        */
@@ -53,6 +72,153 @@ const My = () => {
     queryKey: ['garments'],
     queryFn: getGarments,
   });
+
+  const {
+    data: avatars = [],
+    isLoading: isAvatarsLoading,
+    isError: isAvatarsError,
+  } = useQuery({
+    queryKey: ['my-avatars'],
+    queryFn: getMyAvatars,
+  });
+
+  const currentAvatarId =
+    getCurrentAvatar()?.avatarId ?? null;
+
+  const profileAvatar =
+    avatars.find(
+      (avatar) =>
+        avatar.status === 'done' &&
+        avatar.avatarId === currentAvatarId,
+    ) ??
+    avatars.find(
+      (avatar) =>
+        avatar.status === 'done',
+    ) ??
+    null;
+
+  const profileMeta = [
+    profileAvatar?.bodyTypeLabel ||
+      null,
+
+    profileAvatar?.height != null
+      ? `${Math.round(
+          profileAvatar.height,
+        )}cm`
+      : null,
+
+    profileAvatar?.weight != null
+      ? `${Math.round(
+          profileAvatar.weight,
+        )}kg`
+      : null,
+  ]
+    .filter(
+      (value): value is string =>
+        Boolean(value),
+    )
+    .join(' · ');
+
+  const {
+    data: likedGarments = [],
+    isLoading: isLikesLoading,
+    isError: isLikesError,
+  } = useQuery({
+    queryKey: ['my-likes'],
+    queryFn: getMyLikes,
+  });
+
+  const selectedLikedGarment =
+    likedGarments.find(
+      (garment) =>
+        garment.garmentId ===
+        selectedLikedGarmentId,
+    ) ?? null;
+
+  const {
+    data: selectedGarmentDetail,
+    isLoading: isSelectedGarmentLoading,
+  } = useQuery({
+    queryKey: [
+      'garment-detail',
+      selectedLikedGarmentId,
+    ],
+    queryFn: () => {
+      if (
+        selectedLikedGarmentId === null
+      ) {
+        throw new Error(
+          '선택된 의류가 없습니다.',
+        );
+      }
+
+      return getGarmentDetail(
+        selectedLikedGarmentId,
+      );
+    },
+    enabled:
+      selectedLikedGarmentId !== null,
+  });
+
+  const unlikeMutation = useMutation({
+    mutationFn: unlikeGarment,
+
+    onMutate: async (
+      garmentId: number,
+    ) => {
+      await queryClient.cancelQueries({
+        queryKey: ['my-likes'],
+      });
+
+      const previousLikes =
+        queryClient.getQueryData<
+          LikedGarment[]
+        >(['my-likes']) ?? [];
+
+      queryClient.setQueryData<
+        LikedGarment[]
+      >(
+        ['my-likes'],
+        previousLikes.filter(
+          (garment) =>
+            garment.garmentId !==
+            garmentId,
+        ),
+      );
+
+      return {
+        previousLikes,
+      };
+    },
+
+    onError: (
+      _error,
+      _garmentId,
+      context,
+    ) => {
+      if (
+        context?.previousLikes
+      ) {
+        queryClient.setQueryData(
+          ['my-likes'],
+          context.previousLikes,
+        );
+      }
+    },
+
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['my-likes'],
+      });
+    },
+  });
+
+  const selectedSizeText =
+    selectedGarmentDetail?.sizes
+      .map((size) =>
+        size.size.toUpperCase(),
+      )
+      .join(' · ') ?? '';
 
   const fittings =
     fittingData?.fittings ?? [];
@@ -217,15 +383,12 @@ const My = () => {
                   '"DM Mono", monospace',
               }}
             >
-              모래시계형
-              <span className="mx-[7px]">
-                ·
-              </span>
-              168cm
-              <span className="mx-[7px]">
-                ·
-              </span>
-              54kg
+              {isAvatarsLoading
+                ? '불러오는 중...'
+                : isAvatarsError
+                  ? '아바타 정보 없음'
+                  : profileMeta ||
+                    '아바타 정보 없음'}
             </p>
           </div>
 
@@ -407,6 +570,99 @@ const My = () => {
                   )}
                 </div>
               )}
+
+            {/* ============================================ */}
+            {/* LIKED GARMENTS                               */}
+            {/* ============================================ */}
+
+            <div className="mt-[28px]">
+              <h2
+                className="px-[20px] text-[11px] font-semibold leading-[16.5px] tracking-[1.32px] text-[#9A9490]"
+                style={{
+                  fontFamily:
+                    'Inter, sans-serif',
+                }}
+              >
+                찜한 의류
+              </h2>
+
+              {isLikesLoading && (
+                <p
+                  className="mt-[12px] px-[20px] text-[11px] font-normal leading-[16.5px] text-[#9A9490]"
+                  style={{
+                    fontFamily:
+                      'Inter, sans-serif',
+                  }}
+                >
+                  찜한 의류를 불러오는 중입니다.
+                </p>
+              )}
+
+              {isLikesError && (
+                <p
+                  className="mt-[12px] px-[20px] text-[11px] font-normal leading-[16.5px] text-[#9A9490]"
+                  style={{
+                    fontFamily:
+                      'Inter, sans-serif',
+                  }}
+                >
+                  찜한 의류를 불러오지 못했습니다.
+                </p>
+              )}
+
+              {!isLikesLoading &&
+                !isLikesError &&
+                likedGarments.length ===
+                  0 && (
+                  <p
+                    className="mt-[12px] px-[20px] text-[11px] font-normal leading-[16.5px] text-[#9A9490]"
+                    style={{
+                      fontFamily:
+                        'Inter, sans-serif',
+                    }}
+                  >
+                    아직 찜한 의류가 없습니다.
+                  </p>
+                )}
+
+              {!isLikesLoading &&
+                !isLikesError &&
+                likedGarments.length >
+                  0 && (
+                  <div className="mt-[12px] flex w-full gap-[8px] overflow-x-auto px-[20px] pb-[4px] [&::-webkit-scrollbar]:hidden">
+                    {likedGarments.map(
+                      (garment) => (
+                        <button
+                          key={
+                            garment.garmentId
+                          }
+                          type="button"
+                          onClick={() =>
+                            setSelectedLikedGarmentId(
+                              garment.garmentId,
+                            )
+                          }
+                          className="flex h-[30px] shrink-0 items-center gap-[5px] rounded-[20px] border-[0.71px] border-white/[0.07] bg-[#141414] px-[12px] py-[6px]"
+                        >
+                          <HeartIcon className="h-[17px] w-[17px] shrink-0 text-[#F87171]" />
+
+                          <span
+                            className="whitespace-nowrap text-[11px] font-normal leading-[16.5px] text-[#9A9490]"
+                            style={{
+                              fontFamily:
+                                'Inter, sans-serif',
+                            }}
+                          >
+                            {
+                              garment.name
+                            }
+                          </span>
+                        </button>
+                      ),
+                    )}
+                  </div>
+                )}
+            </div>
           </section>
         )}
 
@@ -541,7 +797,175 @@ const My = () => {
           </section>
         )}
       </div>
-    </main>
+    
+
+      {/* ============================================ */}
+      {/* LIKED GARMENT BOTTOM SHEET                   */}
+      {/* ============================================ */}
+
+      {selectedLikedGarment &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[100] flex items-end bg-black/60"
+            onClick={() =>
+              setSelectedLikedGarmentId(
+                null,
+              )
+            }
+          >
+            <section
+              className="relative w-full rounded-t-[24px] border-t border-white/10 bg-[#141414] px-5 pb-8 pt-4"
+              onClick={(event) =>
+                event.stopPropagation()
+              }
+            >
+              <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-white/20" />
+
+              <button
+                type="button"
+                aria-label="찜 취소"
+                disabled={
+                  unlikeMutation.isPending
+                }
+                onClick={() => {
+                  const garmentId =
+                    selectedLikedGarment.garmentId;
+
+                  setSelectedLikedGarmentId(
+                    null,
+                  );
+
+                  unlikeMutation.mutate(
+                    garmentId,
+                  );
+                }}
+                className="absolute right-[20px] top-[18px] flex h-[25px] w-[25px] items-center justify-center text-[#F87171]"
+              >
+                <HeartIcon className="h-[25px] w-[25px]" />
+              </button>
+
+              <div className="flex items-center gap-4">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[8px] bg-[#eeeeeb]">
+                  {selectedLikedGarment.thumbnailUrl ? (
+                    <img
+                      src={
+                        selectedLikedGarment.thumbnailUrl
+                      }
+                      alt={
+                        selectedLikedGarment.name
+                      }
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <GarmentPlaceholderIcon className="h-10 w-10 text-[#9A9490]" />
+                  )}
+                </div>
+
+                <div className="min-w-0 pr-[32px]">
+                  <p
+                    className="text-[10px] uppercase tracking-[1px] text-[#C9A96E]"
+                    style={{
+                      fontFamily:
+                        '"DM Mono", monospace',
+                    }}
+                  >
+                    {formatGarmentCategory(
+                      selectedLikedGarment.category,
+                    )}
+                  </p>
+
+                  <h2
+                    className="mt-1 truncate text-[16px] font-medium text-[#F0EBE2]"
+                    style={{
+                      fontFamily:
+                        'Inter, sans-serif',
+                    }}
+                  >
+                    {
+                      selectedLikedGarment.name
+                    }
+                  </h2>
+
+                  {isSelectedGarmentLoading && (
+                    <p className="mt-2 text-[12px] text-[#9A9490]">
+                      상품 정보를 불러오는
+                      중입니다.
+                    </p>
+                  )}
+
+                  {!isSelectedGarmentLoading &&
+                    selectedSizeText && (
+                      <p
+                        className="mt-2 text-[12px] text-[#9A9490]"
+                        style={{
+                          fontFamily:
+                            '"DM Mono", monospace',
+                        }}
+                      >
+                        {selectedSizeText}
+                      </p>
+                    )}
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      '/fitting',
+                      {
+                        state: {
+                          garmentId:
+                            selectedLikedGarment.garmentId,
+                        },
+                      },
+                    )
+                  }
+                  className="h-12 rounded-[10px] border border-[#C9A96E] text-sm font-medium text-[#C9A96E]"
+                >
+                  입어보기
+                </button>
+
+                <button
+                  type="button"
+                  disabled={
+                    isSelectedGarmentLoading ||
+                    !selectedGarmentDetail
+                      ?.purchaseUrl
+                  }
+                  onClick={() => {
+                    const purchaseUrl =
+                      selectedGarmentDetail
+                        ?.purchaseUrl;
+
+                    if (!purchaseUrl) {
+                      return;
+                    }
+
+                    window.open(
+                      purchaseUrl,
+                      '_blank',
+                      'noopener,noreferrer',
+                    );
+                  }}
+                  className={[
+                    'h-12 rounded-[10px] bg-[#C9A96E] text-sm font-medium text-[#141414]',
+                    isSelectedGarmentLoading ||
+                    !selectedGarmentDetail
+                      ?.purchaseUrl
+                      ? 'cursor-not-allowed opacity-50'
+                      : '',
+                  ].join(' ')}
+                >
+                  구매하기
+                </button>
+              </div>
+            </section>
+          </div>,
+          document.body,
+        )}
+</main>
   );
 };
 
@@ -570,6 +994,20 @@ function FittingCard({
   thumbnailUrl,
   onRetry,
 }: FittingCardProps) {
+  const {
+    data: garmentDetail,
+    isLoading: isGarmentDetailLoading,
+  } = useQuery({
+    queryKey: [
+      'garment-detail',
+      fitting.garmentId,
+    ],
+    queryFn: () =>
+      getGarmentDetail(
+        fitting.garmentId,
+      ),
+  });
+
   return (
     <article className="h-[285px] w-[185px] overflow-hidden rounded-[8px] border-[0.7px] border-white/[0.07] bg-[#141414]">
       <div className="relative h-[180px] w-[184px] overflow-hidden bg-[#F3F3F3]">
@@ -666,8 +1104,32 @@ function FittingCard({
 
           <button
             type="button"
-            disabled
-            className="h-[31px] w-[66px] rounded-[4px] border-[0.7px] border-white/[0.07] text-[10px] font-normal leading-[15px] text-[#9A9490]"
+            disabled={
+              isGarmentDetailLoading ||
+              !garmentDetail?.purchaseUrl
+            }
+            onClick={() => {
+              const purchaseUrl =
+                garmentDetail
+                  ?.purchaseUrl;
+
+              if (!purchaseUrl) {
+                return;
+              }
+
+              window.open(
+                purchaseUrl,
+                '_blank',
+                'noopener,noreferrer',
+              );
+            }}
+            className={[
+              'h-[31px] w-[66px] rounded-[4px] border-[0.7px] border-white/[0.07] text-[10px] font-normal leading-[15px]',
+              isGarmentDetailLoading ||
+              !garmentDetail?.purchaseUrl
+                ? 'cursor-not-allowed text-[#9A9490]'
+                : 'text-[#C9A96E]',
+            ].join(' ')}
             style={{
               fontFamily:
                 'Inter, sans-serif',
@@ -711,6 +1173,38 @@ function ReportCard({
   const headline =
     summary.headline ??
     'AI 피팅 상담';
+
+  const recommendedGarmentId =
+    summary.items[0]?.garmentId ??
+    null;
+
+  const {
+    data: recommendedGarmentDetail,
+    isLoading:
+      isRecommendedGarmentLoading,
+  } = useQuery({
+    queryKey: [
+      'garment-detail',
+      recommendedGarmentId,
+    ],
+    queryFn: () => {
+      if (
+        recommendedGarmentId ===
+        null
+      ) {
+        throw new Error(
+          '추천 의류가 없습니다.',
+        );
+      }
+
+      return getGarmentDetail(
+        recommendedGarmentId,
+      );
+    },
+    enabled:
+      recommendedGarmentId !==
+      null,
+  });
 
   return (
     <article
@@ -891,8 +1385,34 @@ function ReportCard({
 
               <button
                 type="button"
-                disabled
-                className="h-[39.4px] flex-1 rounded-[4px] border-[0.7px] border-white/[0.07] bg-transparent text-[12px] font-normal leading-[18px] text-[#9A9490]"
+                disabled={
+                  isRecommendedGarmentLoading ||
+                  !recommendedGarmentDetail
+                    ?.purchaseUrl
+                }
+                onClick={() => {
+                  const purchaseUrl =
+                    recommendedGarmentDetail
+                      ?.purchaseUrl;
+
+                  if (!purchaseUrl) {
+                    return;
+                  }
+
+                  window.open(
+                    purchaseUrl,
+                    '_blank',
+                    'noopener,noreferrer',
+                  );
+                }}
+                className={[
+                  'h-[39.4px] flex-1 rounded-[4px] border-[0.7px] border-white/[0.07] bg-transparent text-[12px] font-normal leading-[18px]',
+                  isRecommendedGarmentLoading ||
+                  !recommendedGarmentDetail
+                    ?.purchaseUrl
+                    ? 'cursor-not-allowed text-[#9A9490]'
+                    : 'text-[#C9A96E]',
+                ].join(' ')}
                 style={{
                   fontFamily:
                     'Inter, sans-serif',
@@ -1024,6 +1544,37 @@ function StatCard({
 /* HELPER                                               */
 /* ==================================================== */
 
+function formatGarmentCategory(
+  category: string,
+) {
+  const normalized = category
+    .trim()
+    .toLowerCase();
+
+  const labels: Record<
+    string,
+    string
+  > = {
+    top: '상의',
+    tops: '상의',
+    upper: '상의',
+    shirt: '상의',
+    shirts: '상의',
+    jacket: '상의',
+    outer: '상의',
+
+    bottom: '하의',
+    bottoms: '하의',
+    pants: '하의',
+    trousers: '하의',
+    skirt: '하의',
+
+    dress: '원피스',
+  };
+
+  return labels[normalized] ?? category;
+}
+
 function getConversationMetadata(
   messages: StoredMessage[],
 ) {
@@ -1142,6 +1693,30 @@ function StatusBox({
 /* ==================================================== */
 /* ICON                                                 */
 /* ==================================================== */
+
+
+function HeartIcon({
+  className,
+}: {
+  className?: string;
+}) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 function BellIcon({
   className,

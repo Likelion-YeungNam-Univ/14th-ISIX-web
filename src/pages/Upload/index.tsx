@@ -1,6 +1,13 @@
-import { type FormEvent, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { createAvatar } from '../../api/avatar';
+import {
+  type FormEvent,
+  useState,
+} from 'react';
+import {
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
+
+import { createAvatar } from '@/api/avatar';
 import { ensureGuestSession } from '@/api/session';
 
 import BodyInfoForm, {
@@ -19,30 +26,64 @@ const Upload = () => {
   const pageState =
     location.state as UploadPageState | null;
 
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [bodyInfo, setBodyInfo] = useState<BodyInfo>({
-    height: '',
-    weight: '',
-  });
+  const [photo, setPhoto] =
+    useState<File | null>(null);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState('');
+  const [bodyInfo, setBodyInfo] =
+    useState<BodyInfo>({
+      height: '',
+      weight: '',
+    });
 
-  const height = Number(bodyInfo.height);
-  const weight = Number(bodyInfo.weight);
+  const [
+    isSubmitting,
+    setIsSubmitting,
+  ] = useState(false);
+
+  const [
+    submitError,
+    setSubmitError,
+  ] = useState('');
+
+  const height =
+    Number(bodyInfo.height);
+
+  const weight =
+    Number(bodyInfo.weight);
 
   const isHeightValid =
-    bodyInfo.height !== '' && height >= 130 && height <= 200;
+    bodyInfo.height !== '' &&
+    height >= 130 &&
+    height <= 200;
 
   const isWeightValid =
-    bodyInfo.weight !== '' && weight >= 30 && weight <= 150;
+    bodyInfo.weight !== '' &&
+    weight >= 30 &&
+    weight <= 150;
 
-  const isFormValid = photo !== null && isHeightValid && isWeightValid;
+  const isFormValid =
+    photo !== null &&
+    isHeightValid &&
+    isWeightValid;
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const helperMessage =
+    !photo
+      ? '전신 사진을 등록해주세요'
+      : !isHeightValid ||
+          !isWeightValid
+        ? '신체 정보를 확인해주세요'
+        : '';
+
+  const handleSubmit = async (
+    event: FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault();
 
-    if (!isFormValid || !photo || isSubmitting) {
+    if (
+      !isFormValid ||
+      !photo ||
+      isSubmitting
+    ) {
       return;
     }
 
@@ -52,22 +93,28 @@ const Upload = () => {
     try {
       await ensureGuestSession();
 
-      const { jobId } = await createAvatar(
-        photo,
-        Number(bodyInfo.height),
-        Number(bodyInfo.weight),
-      );
+      const { jobId } =
+        await createAvatar(
+          photo,
+          height,
+          weight,
+        );
 
       navigate('/processing', {
         state: {
           jobId,
-          height: Number(bodyInfo.height),
-          weight: Number(bodyInfo.weight),
-          garmentId: pageState?.garmentId
+          height,
+          weight,
+          garmentId:
+            pageState?.garmentId,
         },
       });
     } catch (error) {
-      console.error('아바타 생성 요청 실패:', error);
+      console.error(
+        '아바타 생성 요청 실패:',
+        error,
+      );
+
       setSubmitError(
         '아바타 생성 요청에 실패했습니다. 서버 연결 상태를 확인한 뒤 다시 시도해 주세요.',
       );
@@ -77,61 +124,116 @@ const Upload = () => {
   };
 
   return (
-    <main className="min-h-screen bg-bg px-5 py-10 sm:px-8">
-      <div className="mx-auto w-full max-w-3xl">
-        <header>
-          <p className="text-sm font-semibold text-gold">STEP 1</p>
-
-          <h1 className="mt-3 text-3xl font-semibold text-text sm:text-4xl">
-            나만의 3D 아바타 만들기
-          </h1>
-
-          <p className="mt-4 leading-7 text-text-sub">
-            전신 사진과 신체 정보를 입력하면 가상 피팅에 사용할 아바타를
-            생성합니다.
-          </p>
+    <main className="min-h-screen bg-[#080808] text-[#F0EBE2]">
+      <div className="mx-auto w-full max-w-[430px]">
+        {/* Header */}
+        <header className="flex h-[54px] items-center border-b border-white/[0.06] px-[21px]">
+          <span
+            className="text-[20px] leading-none tracking-[0.5px] text-[#F0EBE2]"
+            style={{
+              fontFamily:
+                '"DM Serif Display", serif',
+            }}
+          >
+            CLOSR
+          </span>
         </header>
 
         <form
           onSubmit={handleSubmit}
-          className="mt-8 space-y-8 rounded-2xl border border-border bg-card p-5 sm:p-8"
+          className="px-[21px] pt-[18px]"
         >
-          <PhotoUploader
-            photo={photo}
-            onPhotoChange={setPhoto}
-          />
+          {/* Intro */}
+          <header>
+            <h1
+              className="text-[22px] font-normal leading-[30px] tracking-[-0.3px] text-[#F0EBE2]"
+              style={{
+                fontFamily:
+                  'Inter, sans-serif',
+              }}
+            >
+              나만의 3D 아바타 만들기
+            </h1>
 
-          {photo && (
-            <>
-              <div className="border-t border-border" />
+            <p
+              className="mt-[4px] text-[10px] leading-[16px] text-[#8F8985]"
+              style={{
+                fontFamily:
+                  'Inter, sans-serif',
+              }}
+            >
+              정확한 핏 연산을 위해 신체
+              정보와 사진을 등록해주세요.
+            </p>
+          </header>
 
-              <BodyInfoForm
-                bodyInfo={bodyInfo}
-                onBodyInfoChange={setBodyInfo}
-              />
+          {/* Step 1 */}
+          <div className="mt-[31px]">
+            <BodyInfoForm
+              bodyInfo={bodyInfo}
+              onBodyInfoChange={
+                setBodyInfo
+              }
+            />
+          </div>
 
-              {submitError && (
-                <p className="mt-4 text-sm text-red-400">
-                  {submitError}
-                </p>
-              )}
+          {/* Step 2 */}
+          <div className="mt-[25px]">
+            <PhotoUploader
+              photo={photo}
+              onPhotoChange={
+                setPhoto
+              }
+            />
+          </div>
 
-              <button
-                type="submit"
-                disabled={!isFormValid || isSubmitting}
-                className="w-full rounded-xl bg-gold px-5 py-4 font-semibold text-bg transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+          {/* API error */}
+          {submitError && (
+            <div className="mt-[10px] rounded-[7px] border border-red-400/20 bg-red-400/[0.06] px-[12px] py-[9px]">
+              <p
+                role="alert"
+                className="text-[10px] leading-[15px] text-red-400"
               >
-                {isSubmitting
-                  ? '요청 중...'
-                  : '아바타 생성하기'}
-              </button>
+                {submitError}
+              </p>
+            </div>
+          )}
 
-              {!isFormValid && (
-                <p className="text-center text-sm text-text-sub">
-                  올바른 신체 정보를 입력해 주세요.
-                </p>
-              )}
-            </>
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={
+              !isFormValid ||
+              isSubmitting
+            }
+            className={[
+              'mt-[13px] flex h-[54px] w-full items-center justify-center rounded-[11px]',
+              'text-[14px] font-semibold transition-colors',
+              isFormValid &&
+              !isSubmitting
+                ? 'bg-[#C9A96E] text-[#13100A]'
+                : 'cursor-not-allowed border border-white/[0.06] bg-[#141414] text-[#44413F]',
+            ].join(' ')}
+            style={{
+              fontFamily:
+                'Inter, sans-serif',
+            }}
+          >
+            {isSubmitting
+              ? '아바타 생성 중...'
+              : '3D 아바타 생성하기'}
+          </button>
+
+          {helperMessage && (
+            <p
+              className="mt-[8px] text-center text-[10px] leading-[15px] text-[#4F4B48]"
+              style={{
+                fontFamily:
+                  'Inter, sans-serif',
+              }}
+            >
+              {helperMessage}
+            </p>
           )}
         </form>
       </div>
