@@ -505,12 +505,8 @@ const Fitting = () => {
         setColorScale(
           easeData.color_scale
             ? {
-                low:
-                  easeData
-                    .color_scale[0],
-                high:
-                  easeData
-                    .color_scale[1],
+                low: easeData.color_scale.tight.max,
+                high: easeData.color_scale.loose.min,
               }
             : undefined,
         );
