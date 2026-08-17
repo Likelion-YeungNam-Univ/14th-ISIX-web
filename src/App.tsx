@@ -11,6 +11,7 @@ import Processing from '@/pages/Processing';
 import Fitting from '@/pages/Fitting';
 import Report from '@/pages/Report';
 import My from '@/pages/My';
+import MyFittings from '@/pages/My/Fittings';
 import NotFound from '@/pages/NotFound';
 
 const App = () => {
@@ -25,6 +26,10 @@ const App = () => {
         <Route path="/upload" element={<Upload />} />
         <Route path="/fitting" element={<Fitting />} />
         <Route path="/my" element={<My />} />
+        <Route
+          path="/my/fittings"
+          element={<MyFittings />}
+        />
       </Route>
 
       <Route path="/processing" element={<Processing />} />

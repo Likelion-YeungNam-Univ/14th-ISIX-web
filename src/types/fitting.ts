@@ -19,11 +19,37 @@ export interface FittingSizeDetail {
   recommended: boolean;
 }
 
-export type FittingSizes = Record<GarmentSize, FittingSizeDetail>;
+export type FittingSizes = Record<
+  GarmentSize,
+  FittingSizeDetail
+>;
 
 export interface FittingResult {
   garmentId: number;
   sizes: FittingSizes;
   recommendedSize: GarmentSize;
   recommendationReason: string;
+}
+
+export interface FittingRecord {
+  fittingId: number;
+  avatarId: number;
+  garmentId: number;
+  garmentName: string;
+  recommendedSize: GarmentSize | null;
+  wearable: boolean;
+  fittedAt: string;
+}
+
+export interface FittingRecordList {
+  fittings: FittingRecord[];
+}
+
+export interface FittingRecordDetail {
+  fittingId: number;
+  avatarId: number;
+  garmentId: number;
+  garmentName: string;
+  fittedAt: string;
+  result: FittingResult;
 }
