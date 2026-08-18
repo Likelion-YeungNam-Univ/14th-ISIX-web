@@ -234,7 +234,7 @@ const Fitting = () => {
     const urls = Object.values(
       fittingResult.sizes,
     )
-      .map((detail) => detail.modelUrl)
+      .map((detail) => detail.glbUrl)
       .filter(
         (url): url is string =>
           Boolean(url),
@@ -253,7 +253,7 @@ const Fitting = () => {
     ).length;
 
   const heatmapAvailable =
-    Boolean(selectedSizeDetail?.modelUrl) &&
+    Boolean(selectedSizeDetail?.glbUrl) &&
     Boolean(selectedSizeDetail?.easeUrl) &&
     vertexEase.length > 0;
 
@@ -261,7 +261,7 @@ const Fitting = () => {
     Boolean(glbUrl) &&
     (
       selectedGarmentId === null ||
-      Boolean(selectedSizeDetail?.modelUrl)
+      Boolean(selectedSizeDetail?.glbUrl)
     );
 
   /*
@@ -770,7 +770,7 @@ const Fitting = () => {
       );
     }
 
-    if (!selectedSizeDetail?.modelUrl) {
+    if (!selectedSizeDetail?.glbUrl) {
       return (
         <div className="relative h-full w-full">
           <ThreeViewer avatarUrl={glbUrl} />
@@ -793,7 +793,7 @@ const Fitting = () => {
       <ThreeViewer
         avatarUrl={glbUrl}
         garmentUrl={
-          selectedSizeDetail.modelUrl
+          selectedSizeDetail.glbUrl
         }
         preloadUrls={preloadUrls}
         showHeatmap={showHeatmap}

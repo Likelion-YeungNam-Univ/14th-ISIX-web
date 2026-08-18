@@ -1,35 +1,66 @@
-import { forwardRef, useDeferredValue, useEffect } from "react";
-import { useGLTF } from "@react-three/drei";
+import {
+  forwardRef,
+  useDeferredValue,
+  useEffect,
+} from 'react';
+import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface GarmentModelProps {
-    url : string; 
-    preloadUrls?: string[];
+  url: string;
+  preloadUrls?: string[];
 }
 
-const GarmentModel = forwardRef<THREE.Mesh, GarmentModelProps> (
-    ({url, preloadUrls}, ref)=> {
-        const deferredUrl = useDeferredValue(url);
-        const { scene } = useGLTF(deferredUrl, true);
+const GarmentModel = forwardRef<
+  THREE.Mesh,
+  GarmentModelProps
+>(({ url, preloadUrls }, ref) => {
+  const deferredUrl = useDeferredValue(url);
 
-        useEffect(()=>{
-            preloadUrls?.forEach((u)=> useGLTF.preload(u, true));
-        }, [preloadUrls]);
+  const { scene } = useGLTF(
+    deferredUrl,
+    true,
+  );
 
-        // 히트맵 렌더러가 접근할 수 있도록 실제 메시를 ref로 노출
-        useEffect(()=>{
-            scene.traverse((child) =>{
-            const mesh = child as THREE.Mesh;
-            if(mesh.isMesh && ref && typeof ref !== 'function'){
-                ref.current = mesh;
-            }
-        });
-    }, [scene, ref]);
-    
-    return <primitive object={scene}/>;
+  useEffect(() => {
+    preloadUrls?.forEach((preloadUrl) => {
+      useGLTF.preload(
+        preloadUrl,
+        true,
+      );
+    });
+  }, [preloadUrls]);
+
+  useEffect(() => {
+    let firstMesh: THREE.Mesh | null =
+      null;
+
+    scene.traverse((child) => {
+      if (
+        !firstMesh &&
+        child instanceof THREE.Mesh
+      ) {
+        firstMesh = child;
+      }
+    });
+
+    if (
+      ref &&
+      typeof ref !== 'function'
+    ) {
+      ref.current = firstMesh;
     }
-)
+  }, [scene, ref]);
 
-GarmentModel.displayName = 'GarmentModel';
+  return (
+    <primitive
+      object={scene}
+      scale={0.01}
+    />
+  );
+});
+
+GarmentModel.displayName =
+  'GarmentModel';
 
 export default GarmentModel;
