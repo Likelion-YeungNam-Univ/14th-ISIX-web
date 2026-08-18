@@ -4,6 +4,10 @@ export interface CurrentAvatar {
   measurements: Record<string, number> | null;
   height?: number;
   weight?: number;
+  confidence?:number | null;
+  bodyType?: string | null;
+  bodyTypeLabel?: string | null;
+  bodyTypeMessage?: string | null;
 }
 
 const CURRENT_AVATAR_KEY = 'closr_current_avatar';
