@@ -12,18 +12,13 @@ import {
 } from '@/utils/avatarStorage';
 
 const MOCK_BODY_TYPE = {
-  name: '모래시계형',
   matchPercent: 97,
-  description:
-    '어깨와 엉덩이의 폭이 비슷하고 허리가 잘록한 균형 잡힌 체형입니다. 대부분의 실루엣이 잘 어울립니다.',
   recommendations: [
     '허리 라인을 강조하는 핏',
     'A라인 스커트',
     '랩 드레스 & 재킷',
   ],
 };
-
-const MOCK_SCAN_ACCURACY = 98.4;
 
 const getMockFitPercent = (garmentId : number) => 80 + (garmentId * 7) % 20;
 
@@ -96,6 +91,10 @@ const Avatar = () => {
       measurements: selectedAvatar.measurements,
       height: selectedAvatar.height,
       weight: selectedAvatar.weight,
+      confidence : selectedAvatar.confidence,
+      bodyType: selectedAvatar.bodyType,
+      bodyTypeLabel: selectedAvatar.bodyTypeLabel,
+      bodyTypeMessage: selectedAvatar.bodyTypeMessage,
     };
 
     saveCurrentAvatar(nextAvatar);
@@ -112,6 +111,13 @@ const Avatar = () => {
   
   const is3DReady = Boolean(avatar?.glbUrl);
   const isAnalysisDone = measurements.length > 0;
+
+  const hasScanAccuracy = avatar?.confidence != null && Number.isFinite(avatar.confidence);
+  const scanAccuracyLable = hasScanAccuracy ? `${(avatar!.confidence! * 100).toFixed(1)}%` :'-';
+
+  const bodyTypeName = avatar?.bodyTypeLabel ?? avatar?.bodyType ?? null;
+  const bodyTypeDescription = avatar?.bodyTypeMessage ?? null;
+  const hasBodyTypeResult = Boolean(bodyTypeName && bodyTypeDescription);
 
   return (
     <main className="min-h-screen bg-[#080808]">
@@ -315,7 +321,7 @@ const Avatar = () => {
                         className="text-[13px] font-medium text-[#C9A96E]"
                         style={{ fontFamily: '"DM Mono", monospace' }}
                       >
-                        {MOCK_SCAN_ACCURACY}%
+                        {scanAccuracyLable}
                       </span>
                     </div>
 
@@ -387,6 +393,7 @@ const Avatar = () => {
                     </span>
                   </div>
 
+                  {hasBodyTypeResult ? (
                   <div className="mt-[10px] rounded-[16px] border-[0.714px] border-white/10 bg-[#141414] p-[16px]">
                     <div className="flex items-center gap-[10px]">
                       <div className="flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-[10px] border-[0.714px] border-[#C9A96E]/50 text-[#C9A96E]">
@@ -405,7 +412,7 @@ const Avatar = () => {
                           className="text-[20px] font-bold text-[#F0EBE2]"
                           style={{ fontFamily: '"DM Serif Display", serif' }}
                         >
-                          {MOCK_BODY_TYPE.name}
+                          {bodyTypeName}
                         </p>
                       
                       <div className="mt-[4px] flex items-center gap-[8px]">                    
@@ -429,7 +436,7 @@ const Avatar = () => {
                       className="mt-[12px] text-[12px] leading-[19.8px] text-[#9A9490]"
                       style={{ fontFamily: 'Inter, sans-serif' }}
                     >
-                      {MOCK_BODY_TYPE.description}
+                      {bodyTypeDescription}
                     </p>
 
                     <p
@@ -452,6 +459,14 @@ const Avatar = () => {
                       ))}
                     </ul>
                   </div>
+                ): (
+                  <div className="mt-[10px] rounded-[16px] border-[0.714px] border-white/10 bg-[#141414] p-[16px] text-center">
+                    <p className='text-[12px] text-[#9A9490]'
+                    style={{ fontFamily : 'Inter, sans-serif'}}>
+                      체형 진단 결과를 아직 받지 못했습니다.
+                    </p>
+                  </div>
+                )}
 
                   {garments.length > 0 && (
                     <>
@@ -460,7 +475,7 @@ const Avatar = () => {
                           className="text-[13px] text-[#9A9490]"
                           style={{ fontFamily: 'Inter, sans-serif' }}
                         >
-                          {MOCK_BODY_TYPE.name} 인기 의류
+                          {bodyTypeName ?? '내 체형'} 인기 의류
                         </h3>
 
                         <button
