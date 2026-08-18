@@ -10,7 +10,7 @@ export interface FitPart {
 }
 
 export interface FittingSizeDetail {
-  modelUrl: string | null;
+  glbUrl: string | null;
   easeUrl: string | null;
   parts: FitPart[];
   penalty: number;
