@@ -12,10 +12,12 @@ import * as THREE from 'three';
 import AvatarModel from './AvatarModel';
 import CameraController from './CameraController';
 import GarmentModel from './GarmentModel';
+import GarmentWarp from './GarmentWarp';
 import HeatmapRenderer from './HeatmapRenderer';
 import PerfMonitor from './PerfMonitor';
 import ViewerErrorBoundary from './ViewerErrorBoundary';
 import ViewerLoading from './ViewerLoading';
+import { gridBodyUrl } from './warpGarment';
 
 interface ThreeViewerProps {
   avatarUrl?: string;
@@ -24,6 +26,13 @@ interface ThreeViewerProps {
   showHeatmap?: boolean;
   vertexEase?: number[];
   colorScale?: ColorScale;
+  /**
+   * 옷이 시뮬된 격자 체형 구간("H1B2").
+   * ease.json 의 body_class 를 그대로 주면
+   * 옷을 아바타 모양으로 옮깁니다.
+   * 없으면 지금과 같은 화면입니다.
+   */
+  bodyClass?: string;
 }
 
 const ThreeViewer = ({
@@ -33,9 +42,18 @@ const ThreeViewer = ({
   showHeatmap = false,
   vertexEase = [],
   colorScale,
+  bodyClass,
 }: ThreeViewerProps) => {
   const garmentMeshRef =
     useRef<THREE.Mesh>(null);
+
+  // 격자 몸을 받을 수 있을 때만 워핑합니다.
+  const canWarp = Boolean(
+    avatarUrl &&
+      garmentUrl &&
+      bodyClass &&
+      gridBodyUrl(bodyClass),
+  );
 
   return (
     <div className="relative h-full w-full">
@@ -94,6 +112,23 @@ const ThreeViewer = ({
                     preloadUrls
                   }
                 />
+
+                {canWarp && (
+                  <GarmentWarp
+                    meshRef={
+                      garmentMeshRef
+                    }
+                    avatarUrl={
+                      avatarUrl as string
+                    }
+                    garmentUrl={
+                      garmentUrl
+                    }
+                    bodyClass={
+                      bodyClass as string
+                    }
+                  />
+                )}
 
                 <HeatmapRenderer
                   meshRef={
