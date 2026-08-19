@@ -1024,7 +1024,7 @@ function FittingCard({
   });
 
   return (
-    <article className="h-[285px] w-[185px] overflow-hidden rounded-[8px] border-[0.7px] border-white/[0.07] bg-[#141414]">
+    <article className="h-[285px] w-[185px] overflow-hidden border-[0.7px] border-white/[0.07] bg-[#141414]">
       <div className="relative h-[180px] w-[184px] overflow-hidden bg-[#F3F3F3]">
         {thumbnailUrl ? (
           <img
@@ -1102,7 +1102,7 @@ function FittingCard({
           <button
             type="button"
             onClick={onRetry}
-            className="flex h-[31px] w-[82px] items-center justify-center gap-[3px] rounded-[4px] bg-[#C9A96E] text-[#0D0A05]"
+            className="flex h-[31px] w-[82px] items-center justify-center gap-[3px] bg-[#E4B662] text-[#0D0A05]"
           >
             <ShirtIcon className="h-[12px] w-[12px]" />
 
@@ -1139,7 +1139,7 @@ function FittingCard({
               );
             }}
             className={[
-              'h-[31px] w-[66px] rounded-[4px] border-[0.7px] border-white/[0.07] text-[10px] font-normal leading-[15px]',
+              'h-[31px] w-[66px] border-[0.7px] border-white/[0.07] text-[10px] font-normal leading-[15px]',
               isGarmentDetailLoading ||
               !garmentDetail?.purchaseUrl
                 ? 'cursor-not-allowed text-[#9A9490]'
@@ -1383,7 +1383,7 @@ function ReportCard({
                     summary.items[0].garmentId,
                   )
                 }
-                className="flex h-[39.4px] flex-1 items-center justify-center gap-[5px] rounded-[4px] bg-[#C9A96E] text-[#0D0A05]"
+                className="flex h-[39.4px] flex-1 items-center justify-center gap-[5px] bg-[#C9A96E] text-[#0D0A05]"
               >
                 <ShirtIcon className="h-[14px] w-[14px]" />
 
@@ -1421,7 +1421,7 @@ function ReportCard({
                   );
                 }}
                 className={[
-                  'h-[39.4px] flex-1 rounded-[4px] border-[0.7px] border-white/[0.07] bg-transparent text-[12px] font-normal leading-[18px]',
+                  'h-[39.4px] flex-1 border-[0.7px] border-white/[0.07] bg-transparent text-[12px] font-normal leading-[18px]',
                   isRecommendedGarmentLoading ||
                   !recommendedGarmentDetail
                     ?.purchaseUrl

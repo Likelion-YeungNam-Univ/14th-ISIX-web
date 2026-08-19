@@ -195,7 +195,7 @@ const PhotoUploader = ({
 
         <div className="flex items-center gap-[10px]">
           <span
-            className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full border border-[#C9A96E]/50 bg-[#C9A96E]/10 text-[10px] text-[#C9A96E]"
+            className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full border border-[#E4B662]/50 bg-[#E4B662]/10 text-[10px] text-[#E4B662]"
             style={{
               fontFamily:
                 '"DM Mono", monospace',
@@ -306,7 +306,7 @@ const PhotoUploader = ({
                       'Inter, sans-serif',
                   }}
                 >
-                  <span className="mr-[6px] text-[#C9A96E]">
+                  <span className="mr-[6px] text-[#E4B662]">
                     *
                   </span>
                   머리부터 발끝까지 나온
@@ -385,7 +385,7 @@ const PhotoUploader = ({
                       true,
                     )
                   }
-                  className="h-[31px] shrink-0 rounded-[5px] border border-[#C9A96E]/40 px-[12px] text-[10px] text-[#C9A96E]"
+                  className="h-[31px] shrink-0 rounded-[5px] border border-[#E4B662]/40 px-[12px] text-[10px] text-[#E4B662]"
                 >
                   다시 선택
                 </button>
@@ -449,7 +449,7 @@ const PhotoUploader = ({
               {/* ICON */}
 
               <div className="mt-[23px] flex justify-center">
-                <div className="flex h-[84px] w-[84px] items-center justify-center rounded-[18px] border border-[#C9A96E]/50">
+                <div className="flex h-[84px] w-[84px] items-center justify-center rounded-[18px] border border-[#E4B662]/50">
                   <AlbumLargeIcon className="h-[36px] w-[36px] text-[#9A9490]" />
                 </div>
               </div>
@@ -513,7 +513,7 @@ const PhotoUploader = ({
                 onClick={
                   openFilePicker
                 }
-                className="mt-[20px] h-[55px] w-full rounded-[8px] bg-[#C9A96E] text-[14px] font-semibold text-[#13100A]"
+                className="mt-[20px] h-[55px] w-full rounded-[8px] bg-[#E4B662] text-[14px] font-semibold text-[#13100A]"
                 style={{
                   fontFamily:
                     'Inter, sans-serif',
@@ -549,7 +549,7 @@ const PhotoUploader = ({
               <div className="mx-auto h-[5px] w-[38px] rounded-full bg-white/[0.10]" />
 
               <div className="mt-[23px] flex justify-center">
-                <div className="flex h-[84px] w-[84px] items-center justify-center rounded-[18px] border border-[#C9A96E]/50">
+                <div className="flex h-[84px] w-[84px] items-center justify-center rounded-[18px] border border-[#E4B662]/50">
                   <CameraIcon className="h-[32px] w-[32px] text-[#9A9490]" />
                 </div>
               </div>
@@ -612,7 +612,7 @@ const PhotoUploader = ({
                     true,
                   );
                 }}
-                className="mt-[26px] h-[55px] w-full rounded-[8px] bg-[#C9A96E] text-[14px] font-semibold text-[#13100A]"
+                className="mt-[26px] h-[55px] w-full rounded-[8px] bg-[#E4B662] text-[14px] font-semibold text-[#13100A]"
                 style={{
                   fontFamily:
                     'Inter, sans-serif',
