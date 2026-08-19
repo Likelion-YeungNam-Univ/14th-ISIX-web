@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 
 import { getGarmentDetail } from '@/api/garment';
+import { getMyAvatars } from '@/api/avatar';
 import {
   getMyLikes,
   likeGarment,
@@ -57,6 +58,9 @@ const ProductCard = ({ garment }: Props) => {
     useState(false);
 
   const [isActionOpen, setIsActionOpen] =
+    useState(false);
+
+  const [showAvatarGuide, setShowAvatarGuide] =
     useState(false);
 
   /* ================================================== */
@@ -358,21 +362,46 @@ const ProductCard = ({ garment }: Props) => {
                   )}
                 </div>
               </div>
+              
+              {showAvatarGuide ? (
+                <div className="mt-6 rounded-[12px] border border-[#C9A96E]/30 bg-[#1A1A1A] px-4 py-5 text-center">
+                  <p className="text-[15px] font-medium text-[#F0EBE2]">
+                    피팅을 위해 먼저 아바타를 생성해야 합니다.
+                  </p>
 
+                  <p className="mt-2 text-[12px] leading-[18px] text-[#9A9490]">
+                    피팅을 시작하려면
+                    <br/>
+                    먼저 나만의 아바타를 생성해주세요.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={()=>navigate('/avatar')}
+                    className="mt-4 h-11 w-full rounded-[10px] bg-[#C9A96E] text-[13px] font-semibold text-[#141414]"
+                  >
+                    아바타 만들기
+                  </button>
+                </div>
+              ) : (
               <div className="mt-6 grid grid-cols-2 gap-3">
                 <button
-                  type="button"
-                  onClick={() =>
-                    navigate(
-                      '/fitting',
-                      {
-                        state: {
-                          garmentId:
-                            garment.garmentId,
-                        },
-                      },
-                    )
+                type="button"
+                onClick={async () => {
+                  const avatars = await getMyAvatars();
+
+                  if(avatars.length === 0) {
+                  setShowAvatarGuide(true);
+                  return;
                   }
+
+                  navigate('/fitting', {
+                    state: {
+                      garmentId:
+                      garment.garmentId,
+                    }
+                  })
+                }}
                   className="h-12 rounded-[10px] border border-[#C9A96E] text-sm font-medium text-[#C9A96E]"
                 >
                   입어보기
@@ -412,6 +441,7 @@ const ProductCard = ({ garment }: Props) => {
                   구매하기
                 </button>
               </div>
+              )}
             </section>
           </div>,
           document.body,
