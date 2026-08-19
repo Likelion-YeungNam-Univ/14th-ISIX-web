@@ -7,6 +7,9 @@ export interface AvatarJob {
   status: AvatarStatus;
   avatarId: number | null;
   jobId: string;
+
+  createdAt?: string | null;
+
   height?: number;
   weight?: number;
   glbUrl: string | null;
@@ -20,6 +23,7 @@ export interface AvatarJob {
   bodyType?: string | null;
   bodyTypeLabel?: string | null;
   bodyTypeMessage?: string | null;
+  bodyTypeStyling?: string[] | null;
 }
 
 export interface AvatarResponse {

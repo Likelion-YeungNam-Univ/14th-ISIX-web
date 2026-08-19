@@ -2,12 +2,17 @@ export interface CurrentAvatar {
   avatarId: number;
   glbUrl: string | null;
   measurements: Record<string, number> | null;
+
+  createdAt?: string | null;
+
   height?: number;
   weight?: number;
-  confidence?:number | null;
+  confidence?: number | null;
+
   bodyType?: string | null;
   bodyTypeLabel?: string | null;
   bodyTypeMessage?: string | null;
+  bodyTypeStyling?: string[] | null;
 }
 
 const CURRENT_AVATAR_KEY = 'closr_current_avatar';
