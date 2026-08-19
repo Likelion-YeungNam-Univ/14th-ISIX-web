@@ -188,6 +188,15 @@ const Fitting = () => {
     undefined,
   );
 
+  // 옷이 시뮬된 격자 체형 구간("H1B2").
+  // 옷을 아바타 모양으로 옮길 때 씁니다.
+  const [
+    bodyClass,
+    setBodyClass,
+  ] = useState<string | undefined>(
+    undefined,
+  );
+
   const [
     showHeatmap,
     setShowHeatmap,
@@ -401,6 +410,9 @@ const Fitting = () => {
         setSelectedSize(null);
         setVertexEase([]);
         setColorScale(undefined);
+    setBodyClass(undefined);
+      setBodyClass(undefined);
+        setBodyClass(undefined);
         setShowHeatmap(false);
 
         const requestKey =
@@ -484,6 +496,7 @@ const Fitting = () => {
     if (!easeUrl) {
       setVertexEase([]);
       setColorScale(undefined);
+    setBodyClass(undefined);
       return;
     }
 
@@ -500,6 +513,10 @@ const Fitting = () => {
 
         setVertexEase(
           easeData.vertex_ease,
+        );
+
+        setBodyClass(
+          easeData.body_class,
         );
 
         setColorScale(
@@ -519,6 +536,7 @@ const Fitting = () => {
         if (!isCancelled) {
           setVertexEase([]);
           setColorScale(undefined);
+          setBodyClass(undefined);
         }
       }
     };
@@ -799,6 +817,7 @@ const Fitting = () => {
         showHeatmap={showHeatmap}
         vertexEase={vertexEase}
         colorScale={colorScale}
+        bodyClass={bodyClass}
       />
     );
   };
