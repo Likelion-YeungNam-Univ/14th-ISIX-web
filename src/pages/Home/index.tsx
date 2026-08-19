@@ -91,7 +91,7 @@ const Home = () => {
               onClick={() =>
                 navigate('/home/collections')
               }
-              className="w-fit text-center text-[11px] font-medium leading-[16.5px] text-[#C9A96E]"
+              className="w-fit text-center text-[11px] font-medium leading-[16.5px] text-[#E4B662]"
               style={{
                 fontFamily: 'Inter, sans-serif',
               }}
@@ -153,7 +153,7 @@ const Home = () => {
                 <button
                   type="button"
                   onClick={() => void refetch()}
-                  className="mt-[12px] text-[11px] font-medium leading-[16.5px] text-[#C9A96E]"
+                  className="mt-[12px] text-[11px] font-medium leading-[16.5px] text-[#E4B662]"
                   style={{
                     fontFamily:
                       'Inter, sans-serif',
@@ -388,7 +388,7 @@ function FilterButton({
         'flex h-[31px] items-center justify-center rounded-[20px] border-[0.714px] px-[14px] py-[6px]',
         'text-center text-[12px] leading-[18px]',
         active
-          ? 'border-[#C9A96E] bg-[#C9A96E] font-semibold text-[#0D0A05]'
+          ? 'border-[#E4B662] bg-[#E4B662] font-semibold text-[#0D0A05]'
           : 'border-white/[0.07] bg-transparent font-normal text-[#9A9490]',
       ].join(' ')}
       style={{
