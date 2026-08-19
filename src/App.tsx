@@ -13,11 +13,16 @@ import Report from '@/pages/Report';
 import My from '@/pages/My';
 import MyFittings from '@/pages/My/Fittings';
 import NotFound from '@/pages/NotFound';
+import BrandStory from '@/pages/BrandStory';
 
 const App = () => {
   return (
     <Routes>
       <Route path="/" element={<Splash />} />
+      <Route
+        path="/brand-story"
+        element={<BrandStory />}
+      />
 
       <Route element={<MainLayout />}>
         <Route path="/home" element={<Home />} />
@@ -30,6 +35,8 @@ const App = () => {
           path="/my/fittings"
           element={<MyFittings />}
         />
+
+        
       </Route>
 
       <Route path="/processing" element={<Processing />} />
