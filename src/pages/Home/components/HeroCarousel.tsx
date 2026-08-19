@@ -180,14 +180,6 @@ const HeroCarousel = () => {
           >
             지금 피팅하기
           </button>
-
-          <button
-            type="button"
-            aria-label="가상 피팅 정보"
-            className="grid h-[38px] w-[38px] place-items-center rounded-[2px] border border-white/10 bg-white/10 text-white/65 backdrop-blur-sm"
-          >
-            <InfoIcon className="h-[14px] w-[14px]" />
-          </button>
         </div>
       </div>
     </section>
@@ -195,40 +187,3 @@ const HeroCarousel = () => {
 };
 
 export default HeroCarousel;
-
-function InfoIcon({
-  className,
-}: {
-  className?: string;
-}) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className={className}
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle
-        cx="12"
-        cy="12"
-        r="8.5"
-        stroke="currentColor"
-        strokeWidth="1.4"
-      />
-
-      <path
-        d="M12 10.5V16"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-
-      <circle
-        cx="12"
-        cy="7.5"
-        r="0.9"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
