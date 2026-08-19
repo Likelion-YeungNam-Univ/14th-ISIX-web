@@ -311,6 +311,16 @@ const My = () => {
       0,
     );
 
+  const totalBestFitItems =
+    reports.reduce(
+      (total, report) =>
+        total +
+        (report.summary?.items.filter(
+          (item) => item.bestFit,
+        ).length ?? 0),
+      0,
+    );
+
   return (
     <main className="min-h-[100dvh] bg-black text-[#F0EBE2]">
       <div className="mx-auto min-h-[100dvh] w-[402px] max-w-full overflow-x-hidden bg-black">
@@ -696,8 +706,13 @@ const My = () => {
               />
 
               <StatCard
-                label="평균 핏"
-                value="-"
+                label="베스트 핏"
+                value={
+                  fittingConversationIds.length >
+                  0
+                    ? `${totalBestFitItems}개`
+                    : '-'
+                }
               />
             </div>
 
