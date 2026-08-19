@@ -237,7 +237,7 @@ const Home = () => {
 
             {/* 두 번째 설명 */}
             <p
-              className="absolute bottom-[330px] left-[11px] m-0 w-[348px] text-[8px] font-normal leading-[20px] text-[#F0EBE2]"
+              className="absolute bottom-[330px] left-[11px] m-0 w-[348px] text-[10px] font-medium leading-[20px] text-[#F0EBE2]"
               style={{
                 fontFamily: '"DM Serif Display", serif',
               }}
@@ -251,41 +251,88 @@ const Home = () => {
             <img
               src="/images/home/story-earth.jpg"
               alt=""
-              className="absolute bottom-[159.5px] left-[11px] h-[143.5px] w-[256px] object-cover"
+              className="absolute left-[11px] top-[465px] h-[143.5px] w-[256px] object-cover"
             />
 
             {/* 기능명 */}
             <p
-              className="absolute bottom-[243px] right-[14px] m-0 text-[10px] font-bold leading-[20px] text-[#F0EBE2]"
+              className="
+                absolute
+                left-[292px]
+                top-[495px]
+                m-0
+                w-[96px]
+                text-left
+                text-[10px]
+                font-normal
+                leading-[20px]
+                text-[#F0EBE2]
+              "
               style={{
                 fontFamily: '"DM Serif Display", serif',
               }}
             >
-              3D Digital Twin
+              <span className="whitespace-nowrap">
+                3D Digital Twin
+              </span>
               <br />
-              Fit Heatmap &amp; Report
+              <span className="whitespace-nowrap">
+                Fit Heatmap &amp; Report
+              </span>
               <br />
-              Sustainable Luxury
+              <span className="whitespace-nowrap">
+                Sustainable Luxury
+              </span>
             </p>
 
             {/* 기능 설명 */}
-            <p
-              className="absolute bottom-[171px] right-[14px] m-0 text-right text-[7px] font-normal leading-[20px] text-[#F0EBE2]"
+            <div
+              className="
+                absolute
+                left-[204px]
+                top-[566px]
+                w-[189px]
+                text-left
+                text-[9px]
+                font-normal
+                leading-[20px]
+                tracking-[-0.2px]
+                text-[#F0EBE2]
+              "
               style={{
                 fontFamily: 'Pretendard, sans-serif',
               }}
             >
-              사진 한 장으로 구현하는 나만의 정밀 3D 체형 복원
-              <br />
-              360도 시각적 데이터로 1초 만에 확인하는 완벽한 핏
-              <br />
-              실패 없는 주문으로 지구 환경을 지키는 책임 있는 쇼핑
-            </p>
+              <p className="m-0 whitespace-nowrap">
+                사진 한 장으로 구현하는 나만의 정밀 3D 체형 복원
+              </p>
+
+              <p className="m-0 whitespace-nowrap">
+                360도 시각적 데이터로 1초 만에 확인하는 완벽한 핏
+              </p>
+
+              <p className="m-0 whitespace-nowrap">
+                실패 없는 주문으로 지구 환경을 지키는 책임 있는 쇼핑
+              </p>
+            </div>
 
             {/* 브랜드 스토리 CTA */}
             <button
               type="button"
-              className="absolute bottom-[105px] right-[132px] flex h-[20px] w-[137px] items-center gap-[10px] whitespace-nowrap text-[#F0EBE2]"
+              onClick={() => navigate('/brand-story')}
+              aria-label="CLOSR 브랜드 스토리 자세히 보기"
+              className="
+                absolute
+                bottom-[104px]
+                left-1/2
+                flex
+                h-[22px]
+                w-[165px]
+                -translate-x-1/2
+                items-center
+                whitespace-nowrap
+                text-[#F0EBE2]
+              "
             >
               <span
                 className="text-[8px] font-normal leading-[20px]"
@@ -293,12 +340,21 @@ const Home = () => {
                   fontFamily: '"DM Serif Display", serif',
                 }}
               >
-                CLOSR 브랜드 스토리 자세히 보기
+                CLOSR
+              </span>
+
+              <span
+                className="ml-[4px] text-[10px] font-normal leading-[20px]"
+                style={{
+                  fontFamily: 'Pretendard, sans-serif',
+                }}
+              >
+                브랜드 스토리 자세히 보기
               </span>
 
               <span
                 aria-hidden="true"
-                className="text-[12px] font-normal leading-none"
+                className="ml-auto pl-[8px] pb-[3px] text-[16px] font-light leading-none"
               >
                 →
               </span>

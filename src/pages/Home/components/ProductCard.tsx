@@ -203,7 +203,7 @@ const ProductCard = ({ garment }: Props) => {
 
   return (
     <>
-      <article className="relative h-[258px] w-[185px] overflow-hidden rounded-[8px] border-[0.714px] border-white/[0.07] bg-[#141414]">
+      <article className="relative h-[258px] w-[185px] overflow-hidden border-[0.714px] border-white/[0.07] bg-[#141414]">
         {/* 상품 카드 클릭 영역 */}
         <button
           type="button"

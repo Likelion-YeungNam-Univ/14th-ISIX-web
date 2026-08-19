@@ -176,7 +176,7 @@ const HeroCarousel = () => {
           <button
             type="button"
             onClick={scrollToCollections}
-            className="flex h-[38px] items-center justify-center rounded-[2px] bg-[#ccb476] px-[18px] text-[10px] font-bold text-[#17130b]"
+            className="flex h-[38px] items-center justify-center rounded-[2px] bg-[#E4B662] px-[18px] text-[10px] font-bold text-[#17130b]"
           >
             지금 피팅하기
           </button>
