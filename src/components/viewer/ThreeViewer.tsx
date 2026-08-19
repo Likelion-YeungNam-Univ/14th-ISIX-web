@@ -115,14 +115,11 @@ const ThreeViewer = ({
 
                 {canWarp && (
                   <GarmentWarp
-                    meshRef={
-                      garmentMeshRef
+                    garmentUrl={
+                      garmentUrl
                     }
                     avatarUrl={
                       avatarUrl as string
-                    }
-                    garmentUrl={
-                      garmentUrl
                     }
                     bodyClass={
                       bodyClass as string
