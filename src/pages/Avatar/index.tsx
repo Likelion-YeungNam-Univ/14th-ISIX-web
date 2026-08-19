@@ -151,7 +151,7 @@ const Avatar = () => {
     );
 
   const selectedIndex =
-    avatars.findIndex(
+    sortedAvatars.findIndex(
       (item) =>
         item.avatarId ===
         avatar?.avatarId,

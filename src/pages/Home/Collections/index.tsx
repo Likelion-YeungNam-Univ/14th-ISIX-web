@@ -15,7 +15,11 @@ import ProductCard, {
 const PAGE_SIZE = 12;
 const MAX_VISIBLE_PAGES = 6;
 
-type CategoryFilter = 'all' | 'top' | 'bottom';
+type CategoryFilter =
+  | 'all'
+  | 'top'
+  | 'bottom'
+  | 'dress';
 
 const Collections = () => {
   const navigate = useNavigate();
@@ -49,7 +53,15 @@ const Collections = () => {
         return category === '상의';
       }
 
-      return category === '하의';
+      if (selectedCategory === 'bottom') {
+        return category === '하의';
+      }
+
+      if (selectedCategory === 'dress') {
+        return category === '원피스';
+      }
+
+      return true;
     });
   }, [garments, selectedCategory]);
 
@@ -174,6 +186,14 @@ const Collections = () => {
               active={selectedCategory === 'bottom'}
               onClick={() =>
                 setSelectedCategory('bottom')
+              }
+            />
+
+            <FilterButton
+              label="원피스"
+              active={selectedCategory === 'dress'}
+              onClick={() =>
+                setSelectedCategory('dress')
               }
             />
           </div>
