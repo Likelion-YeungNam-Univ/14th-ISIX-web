@@ -747,7 +747,7 @@ const Fitting = () => {
                 (prev) => prev + 1,
               )
             }
-            className="mt-4 rounded-[6px] border border-white/[0.10] px-4 py-2 text-[11px] font-medium text-[#C9A96E]"
+            className="mt-4 rounded-[6px] border border-white/[0.10] px-4 py-2 text-[11px] font-medium text-[#E4B662]"
           >
             다시 시도
           </button>
@@ -836,7 +836,7 @@ const Fitting = () => {
                 'flex flex-1 items-center justify-center text-[12px] font-semibold transition',
                 activePickerMode ===
                   'avatar'
-                  ? 'bg-[#C9B27A] text-[#0A0A0A]'
+                  ? 'bg-[#E4B662] text-[#0A0A0A]'
                   : 'text-[#8D8A85]',
               ].join(' ')}
               style={{
@@ -862,7 +862,7 @@ const Fitting = () => {
                 'flex flex-1 items-center justify-center text-[12px] font-semibold transition',
                 activePickerMode ===
                   'garment'
-                  ? 'bg-[#C9B27A] text-[#0A0A0A]'
+                  ? 'bg-[#E4B662] text-[#0A0A0A]'
                   : 'text-[#8D8A85]',
                 !avatarId
                   ? 'cursor-not-allowed opacity-45'
