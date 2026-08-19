@@ -125,11 +125,11 @@ const Upload = () => {
 
   return (
     <main className="min-h-screen bg-[#080808] text-[#F0EBE2]">
-      <div className="mx-auto w-full max-w-[430px]">
+      <div className="mx-auto min-h-screen w-[402px] max-w-full overflow-hidden bg-[#080808]">
         {/* Header */}
-        <header className="flex h-[54px] items-center border-b border-white/[0.06] px-[21px]">
+        <header className="flex h-[46px] items-center border-b border-white/10 bg-[#080808] px-[14px]">
           <span
-            className="text-[20px] leading-none tracking-[0.5px] text-[#F0EBE2]"
+            className="text-[20px] font-normal leading-[30px] tracking-[1.2px] text-[#F0EBE2]"
             style={{
               fontFamily:
                 '"DM Serif Display", serif',
@@ -141,7 +141,7 @@ const Upload = () => {
 
         <form
           onSubmit={handleSubmit}
-          className="px-[21px] pt-[18px]"
+          className="px-[20px] pt-[18px]"
         >
           {/* Intro */}
           <header>
