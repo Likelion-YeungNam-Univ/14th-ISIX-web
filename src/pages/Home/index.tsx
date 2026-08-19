@@ -10,7 +10,7 @@ import ProductCard, {
   formatGarmentCategory,
 } from './components/ProductCard';
 
-type CollectionFilter = 'all' | 'top' | 'bottom';
+type CollectionFilter = 'all' | 'top' | 'bottom' | 'dress';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -37,11 +37,19 @@ const Home = () => {
       garment.category,
     );
 
-    if (selectedFilter === 'top') {
+   if (selectedFilter === 'top') {
       return category === '상의';
     }
 
-    return category === '하의';
+    if (selectedFilter === 'bottom') {
+      return category === '하의';
+    }
+
+    if (selectedFilter === 'dress') {
+      return category === '원피스';
+    }
+
+    return true;
   });
 
   const previewGarments = filteredGarments.slice(0, 4);
@@ -123,6 +131,14 @@ const Home = () => {
               active={selectedFilter === 'bottom'}
               onClick={() =>
                 setSelectedFilter('bottom')
+              }
+            />
+
+            <FilterButton
+              label="원피스"
+              active={selectedFilter === 'dress'}
+              onClick={() =>
+                setSelectedFilter('dress')
               }
             />
           </div>
