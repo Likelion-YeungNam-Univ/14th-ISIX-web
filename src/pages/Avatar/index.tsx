@@ -374,18 +374,25 @@ const Avatar = () => {
                         </span>
 
                         <span
-                          className="text-[9px] text-[#4A4A4A]"
+                          className={[
+                            'text-[9px]',
+                            isSelected
+                              ? 'text-[#C9A96E]/60'
+                              : 'text-[#4A4A4A]',
+                          ].join(' ')}
                           style={{
                             fontFamily:
                               '"DM Mono", monospace',
                           }}
                         >
-                          {
-                            statusLabelMap[
-                              item
-                                .status
-                            ]
-                          }
+                          {item.status === 'done' &&
+                          item.createdAt
+                            ? formatCreatedDate(
+                                item.createdAt,
+                              )
+                            : statusLabelMap[
+                                item.status
+                              ]}
                         </span>
                       </div>
                     </button>
