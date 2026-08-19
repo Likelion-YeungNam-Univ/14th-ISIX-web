@@ -210,7 +210,7 @@ const Home = () => {
 
             {/* 숲 이미지 */}
             <img
-              src="/public/images/home/story-nature.jpg"
+              src="/images/home/story-nature.jpg"
               alt=""
               className="absolute bottom-[478px] right-[10px] h-[193px] w-[289px] object-cover"
             />
@@ -249,7 +249,7 @@ const Home = () => {
 
             {/* 지구 이미지 */}
             <img
-              src="/public/images/home/story-earth.jpg"
+              src="/images/home/story-earth.jpg"
               alt=""
               className="absolute bottom-[159.5px] left-[11px] h-[143.5px] w-[256px] object-cover"
             />

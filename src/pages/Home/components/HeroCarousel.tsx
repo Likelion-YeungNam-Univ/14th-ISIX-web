@@ -10,7 +10,7 @@ const AUTOPLAY_DELAY = 5000;
 const heroSlides = [
   {
     id: 1,
-    image: '/public/images/home/hero-1.jpg',
+    image: '/images/home/hero-1.jpg',
     tag: 'MCM GOTS TAG',
     title: '인증된 유기농 섬유를 사용한\nMCM 옷들을 만나보세요',
     description:
@@ -18,7 +18,7 @@ const heroSlides = [
   },
   {
     id: 2,
-    image: '/public/images/home/hero-2.jpg',
+    image: '/images/home/hero-2.jpg',
     tag: 'MCM EDITION',
     title: 'MCM 디스코 비세토스를\n소개합니다',
     description:
@@ -26,7 +26,7 @@ const heroSlides = [
   },
   {
     id: 3,
-    image: '/public/images/home/hero-3.jpg',
+    image: '/images/home/hero-3.jpg',
     tag: 'MCM EDITION',
     title: 'MCM과 함께하는 하루:\n시티 스타일 가이드',
     description:
@@ -34,7 +34,7 @@ const heroSlides = [
   },
   {
     id: 4,
-    image: '/public/images/home/hero-4.jpg',
+    image: '/images/home/hero-4.jpg',
     tag: 'NEW',
     title: 'MCM\n신상 입어보기',
     description:
