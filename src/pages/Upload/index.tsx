@@ -204,7 +204,7 @@ const Upload = () => {
               'text-[14px] font-semibold transition-colors',
               isFormValid &&
               !isSubmitting
-                ? 'bg-[#C9A96E] text-[#13100A]'
+                ? 'bg-[#E4B662] text-[#13100A]'
                 : 'cursor-not-allowed border border-white/[0.06] bg-[#141414] text-[#44413F]',
             ].join(' ')}
             style={{
