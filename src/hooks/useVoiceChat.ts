@@ -89,8 +89,9 @@ function notice(text: string): Turn {
  * 먼저 사라지면 2차 대화에서 profile 이 비어 보입니다.
  *
  * 홈(onboarding)과 피팅룸(fitting)은 서로 다른 대화라 mode 로 나눕니다.
+ * [수정] 홈과 피팅룸 대화를 하나로 잇기 위해 항상 같은 키를 사용합니다.
  */
-const cvKey = (mode: ChatMode) => `closr_chat_cv_${mode}`;
+const cvKey = (_mode: ChatMode) => 'closr_chat_cv';
 
 function loadConversationId(mode: ChatMode): string | undefined {
   try {
@@ -109,8 +110,8 @@ function saveConversationId(mode: ChatMode, id: string | undefined) {
   }
 }
 
-const historyKey = (mode: ChatMode) =>
-  `closr_chat_history_${mode}`;
+const historyKey = (_mode: ChatMode) =>
+  'closr_chat_history';
 
 function saveConversationToHistory(
   mode: ChatMode,
@@ -505,8 +506,7 @@ export function useVoiceChat(config: VoiceChatConfig) {
     prevMode.current = config.mode;
 
     stop();
-    conversationId.current = loadConversationId(config.mode);
-    setTurns([]);
+    // conversationId, turns는 더 이상 초기화 하지 않습니다. - 대화를 이어나감.
   }, [config.mode, stop]);
 
   useEffect(
