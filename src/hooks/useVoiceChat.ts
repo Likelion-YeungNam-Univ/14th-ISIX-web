@@ -65,6 +65,31 @@ function pickKoreanVoice(): Promise<SpeechSynthesisVoice | null> {
   });
 }
 
+/**
+ * iOS 의 음성 출력 잠금을 풉니다. 탭 핸들러 안에서 한 번만 부르면 됩니다.
+ *
+ * iOS 는 speechSynthesis.speak() 가 사용자 조작 안에서 처음 불리기를 요구합니다.
+ * 우리 답변은 SSE 가 도착한 뒤에 읽으므로 그 시점에는 조작과 끊겨 있어, 아이폰에서만
+ * 아무 소리가 나지 않았습니다. 데스크톱에는 이 제약이 없어 증상이 안 보였습니다.
+ *
+ * 그래서 마이크를 누르는 순간 볼륨 0 짜리 빈 발화를 한 번 흘려보냅니다. 들리지
+ * 않지만 이후의 재생이 허용됩니다. 한 번이면 되므로 플래그로 막습니다.
+ */
+let ttsUnlocked = false;
+
+function unlockSpeech(): void {
+  if (ttsUnlocked || !ttsSupported()) return;
+  ttsUnlocked = true;
+  try {
+    const warmUp = new SpeechSynthesisUtterance('');
+    warmUp.volume = 0;
+    speechSynthesis.speak(warmUp);
+  } catch {
+    // 잠금 해제는 부가 동작입니다. 실패해도 인식과 전송은 그대로 진행합니다.
+    ttsUnlocked = false;
+  }
+}
+
 function notice(text: string): Turn {
   return {
     id: `n_${Date.now()}`,
@@ -398,6 +423,9 @@ export function useVoiceChat(config: VoiceChatConfig) {
   const startListening = useCallback(() => {
     const Ctor = getRecognitionCtor();
     if (!Ctor || busy) return;
+
+    // 여기가 사용자 조작 안입니다. iOS 는 이 시점에만 음성 출력을 열어 줍니다.
+    unlockSpeech();
 
     stopSpeaking(); // 말하는 중에 들으면 자기 목소리를 받아 적습니다
 
