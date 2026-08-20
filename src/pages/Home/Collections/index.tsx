@@ -11,6 +11,7 @@ import { getGarments } from '@/api/garment';
 import ProductCard, {
   formatGarmentCategory,
 } from '../components/ProductCard';
+import HomeLogo from '@/components/common/HomeLogo';
 
 const PAGE_SIZE = 12;
 const MAX_VISIBLE_PAGES = 6;
@@ -120,15 +121,7 @@ const Collections = () => {
       <div className="mx-auto min-h-screen w-[402px] max-w-full overflow-hidden bg-[#090909] text-white">
         {/* Home과 동일한 상단 헤더 */}
         <header className="flex h-[46px] items-center justify-between border-b border-white/10 bg-[#080808] px-[14px]">
-          <span
-            className="text-[20px] font-bold leading-[30px] tracking-[1.2px] text-[#F0EBE2]"
-            style={{
-              fontFamily:
-                '"DM Serif Display", serif',
-            }}
-          >
-            CLOSR
-          </span>
+          <HomeLogo className="text-[20px] font-bold leading-[30px] tracking-[1.2px] text-[#F0EBE2]" />
 
           <button
             type="button"

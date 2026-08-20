@@ -9,6 +9,7 @@ import HeroCarousel from './components/HeroCarousel';
 import ProductCard, {
   formatGarmentCategory,
 } from './components/ProductCard';
+import HomeLogo from '@/components/common/HomeLogo';
 
 type CollectionFilter = 'all' | 'top' | 'bottom' | 'dress';
 
@@ -58,15 +59,7 @@ const Home = () => {
     <main className="min-h-screen bg-[#080808]">
       <div className="mx-auto min-h-screen w-[402px] max-w-full overflow-hidden bg-[#080808] text-white">
         <header className="flex h-[46px] items-center justify-between border-b border-white/10 bg-[#080808] px-[14px]">
-          <span
-            className="text-[20px] font-normal leading-[30px] tracking-[1.2px] text-[#F0EBE2] "
-            style={{
-              fontFamily:
-                '"DM Serif Display", serif',
-            }}
-          >
-            CLOSR
-          </span>
+          <HomeLogo className="text-[20px] font-normal leading-[30px] tracking-[1.2px] text-[#F0EBE2] " />
 
           <button
             type="button"
