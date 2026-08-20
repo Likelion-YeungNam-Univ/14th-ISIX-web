@@ -325,7 +325,9 @@ const Avatar = () => {
                         )
                       }
                       className={[
-                        'flex w-[84px] shrink-0 flex-col items-center gap-[8px] rounded-[16px] border-[0.714px] px-[14px] transition-colors',
+                        // py 가 없어서 아이콘이 카드 위 모서리에 1px 까지 붙어
+                        // 있었습니다. 시안의 카드가 84x92 라 위아래 8px 씩 줍니다.
+                        'flex w-[84px] shrink-0 flex-col items-center gap-[8px] rounded-[16px] border-[0.714px] px-[14px] py-[8px] transition-colors',
                         isSelected
                           ? 'border-[#C9A96E] bg-[#C9A96E]/10'
                           : 'border-white/10 bg-[#141414]',
