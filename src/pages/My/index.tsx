@@ -33,6 +33,7 @@ import type {
 } from '@/types/chat';
 import type { LikedGarment } from '@/types/like';
 import { getCurrentAvatar } from '@/utils/avatarStorage';
+import HomeLogo from '@/components/common/HomeLogo';
 
 type MyTab = 'fitting' | 'report';
 
@@ -329,15 +330,7 @@ const My = () => {
         {/* ============================================ */}
 
         <header className="flex h-[46px] items-center justify-between border-b border-white/10 bg-[#080808] px-[14px]">
-          <span
-            className="text-[20px] leading-[30px] tracking-[1.2px] text-[#F0EBE2]"
-            style={{
-              fontFamily:
-                '"DM Serif Display", serif',
-            }}
-          >
-            CLOSR
-          </span>
+          <HomeLogo className="text-[20px] leading-[30px] tracking-[1.2px] text-[#F0EBE2]" />
 
           <button
             type="button"

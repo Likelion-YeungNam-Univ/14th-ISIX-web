@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { getMyFittings } from '@/api/fitting';
 import { getGarments } from '@/api/garment';
+import HomeLogo from '@/components/common/HomeLogo';
 
 const PAGE_SIZE = 12;
 const MAX_VISIBLE_PAGES = 6;
@@ -114,15 +115,7 @@ const MyFittings = () => {
       <div className="mx-auto min-h-[100dvh] w-[402px] max-w-full overflow-x-hidden bg-[#090909]">
         {/* Home / MY와 동일한 Header */}
         <header className="flex h-[46px] items-center justify-between border-b border-white/10 bg-[#080808] px-[14px]">
-          <span
-            className="text-[20px] font-bold leading-[30px] tracking-[1.2px] text-[#F0EBE2]"
-            style={{
-              fontFamily:
-                '"DM Serif Display", serif',
-            }}
-          >
-            CLOSR
-          </span>
+          <HomeLogo className="text-[20px] font-bold leading-[30px] tracking-[1.2px] text-[#F0EBE2]" />
 
           <button
             type="button"

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import HomeLogo from '@/components/common/HomeLogo';
 
 const BrandStory = () => {
   const navigate = useNavigate();
@@ -13,14 +14,7 @@ const BrandStory = () => {
       <div className="mx-auto min-h-[100dvh] w-[402px] max-w-full overflow-hidden bg-[#080808] text-[#F0EBE2]">
         {/* Header */}
         <header className="flex h-[46px] items-center justify-between border-b border-white/10 bg-[#080808] px-[14px]">
-          <span
-            className="text-[20px] font-normal leading-[30px] tracking-[1.2px] text-[#F0EBE2]"
-            style={{
-              fontFamily: '"DM Serif Display", serif',
-            }}
-          >
-            CLOSR
-          </span>
+          <HomeLogo className="text-[20px] font-normal leading-[30px] tracking-[1.2px] text-[#F0EBE2]" />
 
           <button
             type="button"
