@@ -8,6 +8,9 @@ export interface AvatarJob {
   avatarId: number | null;
   jobId: string;
 
+  /** 사용자가 붙인 이름. 없으면 화면에서 순번으로 부릅니다. */
+  name?: string | null;
+
   createdAt?: string | null;
 
   height?: number;

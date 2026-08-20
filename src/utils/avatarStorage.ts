@@ -1,5 +1,6 @@
 export interface CurrentAvatar {
   avatarId: number;
+  name?: string | null;
   glbUrl: string | null;
   measurements: Record<string, number> | null;
 

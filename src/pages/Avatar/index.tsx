@@ -6,6 +6,7 @@ import { getGarments } from '@/api/garment';
 import {
   deleteAvatar,
   getMyAvatars,
+  updateAvatarName,
 } from '@/api/avatar';
 import ThreeViewer from '@/components/viewer/ThreeViewer';
 import VoiceAssistant from '@/components/voice/VoiceAssistant';
@@ -62,6 +63,21 @@ const statusLabelMap: Record<
   failed: '생성 실패',
 };
 
+/** 서버가 받는 이름 길이 상한. RequestAvatarNameDto 의 컬럼 길이와 같습니다. */
+const NAME_MAX = 50;
+
+/**
+ * 화면에 부를 이름.
+ *
+ * 이름을 붙이지 않은 아바타는 순번으로 부릅니다. 순번은 저장된 값이 아니라
+ * 목록에서의 위치라, 앞의 것을 지우면 뒤 번호가 당겨집니다. 이름을 붙이면
+ * 그 문제가 사라지는 것이 이 기능의 쓸모이기도 합니다.
+ */
+const displayName = (
+  item: { name?: string | null },
+  index: number,
+) => item.name?.trim() || `아바타 ${index + 1}`;
+
 const Avatar = () => {
   const navigate = useNavigate();
 
@@ -110,6 +126,19 @@ const Avatar = () => {
     setIsConfirmOpen,
   ] = useState(false);
 
+  /* 이름 수정 */
+  const [isEditingName, setIsEditingName] =
+    useState(false);
+
+  const [nameDraft, setNameDraft] =
+    useState('');
+
+  const [isSavingName, setIsSavingName] =
+    useState(false);
+
+  const [nameError, setNameError] =
+    useState<string | null>(null);
+
   const sortedAvatars = [...avatars].sort(
     (a, b) =>
       (a.avatarId ?? 0) -
@@ -147,12 +176,72 @@ const Avatar = () => {
     ) ?? null;
 
   const checkedLabel = checkedAvatar
-    ? `아바타 ${
+    ? displayName(
+        checkedAvatar,
         sortedAvatars.indexOf(
           checkedAvatar,
-        ) + 1
-      }`
+        ),
+      )
     : '';
+
+  const startEditName = () => {
+    // 순번으로 부르던 것은 지운 이름이 아니라 기본값이라 빈 칸에서 시작합니다.
+    setNameDraft(avatar?.name ?? '');
+    setNameError(null);
+    setIsEditingName(true);
+  };
+
+  const handleSaveName = async () => {
+    if (!avatar || isSavingName) return;
+
+    const next = nameDraft.trim();
+
+    // 서버도 막지만 여기서 먼저 거릅니다. 백엔드가 길이 초과와 없는 아바타를
+    // 같은 INVALID_INPUT 으로 돌려주어 구분해 안내할 수 없기 때문입니다.
+    if (!next) {
+      setNameError('이름을 입력해 주세요.');
+      return;
+    }
+    if (next.length > NAME_MAX) {
+      setNameError(
+        `${NAME_MAX}자까지 쓸 수 있습니다.`,
+      );
+      return;
+    }
+
+    setIsSavingName(true);
+    setNameError(null);
+
+    try {
+      await updateAvatarName(
+        avatar.avatarId,
+        next,
+      );
+
+      setAvatars((prev) =>
+        prev.map((item) =>
+          item.avatarId ===
+          avatar.avatarId
+            ? { ...item, name: next }
+            : item,
+        ),
+      );
+
+      const updated = {
+        ...avatar,
+        name: next,
+      };
+      saveCurrentAvatar(updated);
+      setAvatar(updated);
+      setIsEditingName(false);
+    } catch {
+      setNameError(
+        '이름을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+      );
+    } finally {
+      setIsSavingName(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (checkedId == null || isDeleting) {
@@ -215,6 +304,7 @@ const Avatar = () => {
     const nextAvatar = {
       avatarId:
         selectedAvatar.avatarId,
+      name: selectedAvatar.name,
       glbUrl:
         selectedAvatar.glbUrl,
       measurements:
@@ -255,6 +345,13 @@ const Avatar = () => {
         item.avatarId ===
         avatar?.avatarId,
     );
+
+  const currentName = avatar
+    ? displayName(
+        avatar,
+        selectedIndex,
+      )
+    : '';
 
   const is3DReady =
     Boolean(avatar?.glbUrl);
@@ -555,7 +652,10 @@ const Avatar = () => {
                         >
                           {item.avatarId !=
                           null
-                            ? `아바타 ${index + 1}`
+                            ? displayName(
+                                item,
+                                index,
+                              )
                             : '생성 중'}
                         </span>
 
@@ -636,24 +736,122 @@ const Avatar = () => {
 
                   {/* 오른쪽 정보 */}
                   <div className="flex min-w-0 flex-1 flex-col px-[14px] py-[15px]">
-                    <div className="flex items-center gap-[5px]">
+                    {isEditingName ? (
+                      <div className="flex items-center gap-[6px]">
+                        <input
+                          value={nameDraft}
+                          onChange={(e) => {
+                            setNameDraft(
+                              e.target
+                                .value,
+                            );
+                            setNameError(
+                              null,
+                            );
+                          }}
+                          onKeyDown={(e) => {
+                            if (
+                              e.key ===
+                              'Enter'
+                            ) {
+                              void handleSaveName();
+                            }
+                            if (
+                              e.key ===
+                              'Escape'
+                            ) {
+                              setIsEditingName(
+                                false,
+                              );
+                            }
+                          }}
+                          maxLength={
+                            NAME_MAX
+                          }
+                          autoFocus
+                          placeholder={
+                            currentName
+                          }
+                          aria-label="아바타 이름"
+                          className="min-w-0 flex-1 rounded-[6px] border-[0.714px] border-[#C9A96E]/50 bg-transparent px-[8px] py-[4px] text-[14px] text-[#F0EBE2] outline-none placeholder:text-[#4A4740]"
+                          style={{
+                            fontFamily:
+                              'Inter, sans-serif',
+                          }}
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void handleSaveName()
+                          }
+                          disabled={
+                            isSavingName
+                          }
+                          className="shrink-0 rounded-[6px] bg-[#C9A96E] px-[8px] py-[4px] text-[11px] font-semibold text-[#0D0A05] disabled:opacity-50"
+                          style={{
+                            fontFamily:
+                              'Inter, sans-serif',
+                          }}
+                        >
+                          저장
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setIsEditingName(
+                              false,
+                            )
+                          }
+                          disabled={
+                            isSavingName
+                          }
+                          className="shrink-0 text-[11px] text-[#9A9490]"
+                          style={{
+                            fontFamily:
+                              'Inter, sans-serif',
+                          }}
+                        >
+                          취소
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-[5px]">
+                        <p
+                          className="m-0 truncate text-[16px] font-normal leading-[22px] text-[#F0EBE2]"
+                          style={{
+                            fontFamily:
+                              '"DM Serif Display", serif',
+                          }}
+                        >
+                          {currentName}
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={
+                            startEditName
+                          }
+                          aria-label="아바타 이름 수정"
+                          className="shrink-0 p-[4px]"
+                        >
+                          <EditIcon className="h-[10px] w-[10px] text-[#6F6B66]" />
+                        </button>
+                      </div>
+                    )}
+
+                    {nameError && (
                       <p
-                        className="m-0 text-[16px] font-normal leading-[22px] text-[#F0EBE2]"
+                        className="mt-[4px] text-[10px] text-[#E5695C]"
                         style={{
                           fontFamily:
-                            '"DM Serif Display", serif',
+                            'Inter, sans-serif',
                         }}
                       >
-                        아바타{' '}
-                        {selectedIndex >=
-                        0
-                          ? selectedIndex +
-                            1
-                          : avatar.avatarId}
+                        {nameError}
                       </p>
-
-                      <EditIcon className="h-[10px] w-[10px] text-[#6F6B66]" />
-                    </div>
+                    )}
 
                     {createdDate && (
                       <p
