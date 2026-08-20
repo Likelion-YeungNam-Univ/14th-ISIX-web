@@ -185,6 +185,18 @@ function toTurns(messages: StoredMessage[]): Turn[] {
 /* 훅                                                                   */
 /* ------------------------------------------------------------------ */
 
+/**
+ * 말이 끝났다고 볼 침묵 길이(ms).
+ *
+ * 사람은 문장 중간에 쉽니다. "이거 어깨가 …… 좀 끼는 것 같은데" 처럼요.
+ * 그 쉼에서 질문을 잘라 보내면 뒷말이 통째로 버려집니다. 그렇다고 길게
+ * 잡으면 말을 마치고도 한참 기다립니다.
+ *
+ * 한국어 자연 발화의 문장 내 쉼은 대체로 0.5초 안쪽이고 문장 사이 쉼이
+ * 1초 안팎이라, 그 위인 1.4초를 경계로 둡니다.
+ */
+const SILENCE_MS = 1400;
+
 export function useVoiceChat(config: VoiceChatConfig) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [listening, setListening] = useState(false);
@@ -415,10 +427,36 @@ export function useVoiceChat(config: VoiceChatConfig) {
 
   /* ---------------- STT ---------------- */
 
+  /** 아직 보내지 않은 확정 인식 결과. 침묵이 이어지면 이걸 한 번에 보냅니다. */
+  const bufferRef = useRef('');
+  const silenceTimer = useRef<number | null>(null);
+  /** 사용자가 계속 듣기를 원하는지. 브라우저가 멋대로 끊었을 때 되살릴지 판단합니다. */
+  const wantListening = useRef(false);
+
+  const clearSilence = useCallback(() => {
+    if (silenceTimer.current !== null) {
+      clearTimeout(silenceTimer.current);
+      silenceTimer.current = null;
+    }
+  }, []);
+
+  /** 모아둔 말을 보냅니다. 보낼 게 없으면 아무 일도 하지 않습니다. */
+  const flush = useCallback(() => {
+    clearSilence();
+    const text = bufferRef.current.trim();
+    bufferRef.current = '';
+    setInterim('');
+    if (text) void send(text);
+    return !!text;
+  }, [clearSilence, send]);
+
   const stopListening = useCallback(() => {
+    // 사용자가 직접 멈춘 것이므로 되살리지 않고, 모아둔 말은 보냅니다.
+    wantListening.current = false;
     recognitionRef.current?.stop();
     setListening(false);
-  }, []);
+    flush();
+  }, [flush]);
 
   const startListening = useCallback(() => {
     const Ctor = getRecognitionCtor();
@@ -435,13 +473,25 @@ export function useVoiceChat(config: VoiceChatConfig) {
      */
     recognitionRef.current?.abort?.();
 
+    clearSilence();
+    bufferRef.current = '';
+    wantListening.current = true;
+
     const rec = new Ctor();
     rec.lang = 'ko-KR';
-    rec.continuous = false;
+    /*
+     * 침묵에서 인식을 끝내지 않습니다.
+     *
+     * false 면 크롬이 짧은 쉼 하나에도 발화가 끝났다고 보고 종료합니다.
+     * 말하다 잠깐 생각하면 거기서 잘리고, 잘린 조각이 그대로 질문이 됩니다.
+     * true 로 두고 "언제 끝났는가" 는 아래 침묵 타이머로 우리가 정합니다.
+     */
+    rec.continuous = true;
     rec.interimResults = true;
     rec.maxAlternatives = 1;
 
     rec.onstart = () => setListening(true);
+
     rec.onresult = (e: any) => {
       let finalText = '';
       let partial = '';
@@ -450,13 +500,26 @@ export function useVoiceChat(config: VoiceChatConfig) {
         if (r.isFinal) finalText += r[0].transcript;
         else partial += r[0].transcript;
       }
+
+      // 확정된 조각은 쌓아만 둡니다. 여기서 보내면 쉼마다 질문이 쪼개집니다.
+      if (finalText) bufferRef.current += finalText;
       setInterim(partial);
-      if (finalText) {
-        setInterim('');
-        void send(finalText);
-      }
+
+      // 말이 이어지는 동안에는 계속 미룹니다.
+      clearSilence();
+      silenceTimer.current = window.setTimeout(() => {
+        wantListening.current = false;
+        recognitionRef.current?.stop();
+        flush();
+      }, SILENCE_MS);
     };
+
     rec.onerror = (e: any) => {
+      // no-speech 는 아무 말 없이 시간이 지났을 때 크롬이 매번 던집니다.
+      // 사용자 잘못이 아니고 onend 에서 되살리므로 여기서는 넘깁니다.
+      if (e.error === 'no-speech' || e.error === 'aborted') return;
+
+      wantListening.current = false;
       setListening(false);
       if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
         setTurns((prev) => [
@@ -465,14 +528,36 @@ export function useVoiceChat(config: VoiceChatConfig) {
         ]);
       }
     };
+
     rec.onend = () => {
-      setListening(false);
       setInterim('');
+
+      /*
+       * 크롬은 continuous 여도 몇 초 침묵하면 스스로 끝냅니다. 사용자가 아직
+       * 말하려 하는데 끊긴 것이므로 되살립니다. 안 되살리면 "듣고 있습니다"
+       * 를 보면서 말했는데 아무것도 안 들어가는 상태가 됩니다.
+       *
+       * 같은 인식기는 재사용할 수 없어 start() 를 다시 부릅니다. 곧바로
+       * 부르면 InvalidStateError 가 나므로 한 틱 미룹니다.
+       */
+      if (!wantListening.current) {
+        setListening(false);
+        return;
+      }
+      window.setTimeout(() => {
+        if (!wantListening.current) return;
+        try {
+          rec.start();
+        } catch {
+          wantListening.current = false;
+          setListening(false);
+        }
+      }, 0);
     };
 
     recognitionRef.current = rec;
     rec.start();
-  }, [busy, send, stopSpeaking]);
+  }, [busy, clearSilence, flush, stopSpeaking]);
 
   /* ---------------- 정리 ---------------- */
 
@@ -489,11 +574,16 @@ export function useVoiceChat(config: VoiceChatConfig) {
   const stop = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
+    // 되살리기와 침묵 타이머를 먼저 끕니다. 안 끄면 창을 닫은 뒤에 타이머가
+    // 깨어나 질문이 뒤늦게 나가거나 인식기가 되살아납니다.
+    wantListening.current = false;
+    clearSilence();
+    bufferRef.current = '';
     recognitionRef.current?.abort?.();
     setListening(false);
     setInterim('');
     stopSpeaking();
-  }, [stopSpeaking]);
+  }, [clearSilence, stopSpeaking]);
 
   const reset = useCallback(() => {
     stop();
@@ -540,6 +630,9 @@ export function useVoiceChat(config: VoiceChatConfig) {
   useEffect(
     () => () => {
       abortRef.current?.abort();
+      // 되살리기를 먼저 끕니다. 남겨두면 onend 가 언마운트 뒤에 인식기를 다시 켭니다.
+      wantListening.current = false;
+      if (silenceTimer.current !== null) clearTimeout(silenceTimer.current);
       recognitionRef.current?.abort?.();
       if (ttsSupported()) speechSynthesis.cancel();
     },
