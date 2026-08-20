@@ -1095,6 +1095,12 @@ const Avatar = () => {
               {checkedLabel}
             </p>
 
+            {/*
+              피팅 기록이 함께 지워지는 것을 반드시 알립니다.
+              백엔드가 아바타를 지울 때 그 아바타로 저장한 FittingRecord 도
+              같이 지웁니다. 아바타만 사라질 거라 생각하고 눌렀다가 MY 탭의
+              저장된 피팅이 통째로 없어지면 되돌릴 방법이 없습니다.
+            */}
             <p
               className="mt-[8px] text-[12px] leading-[18px] text-[#9A9490]"
               style={{
@@ -1102,9 +1108,9 @@ const Avatar = () => {
                   'Inter, sans-serif',
               }}
             >
-              지우면 되돌릴 수 없습니다.
+              이 아바타로 저장한 피팅 기록도
               <br />
-              정말 지울까요?
+              함께 지워집니다. 되돌릴 수 없습니다.
             </p>
 
             <div className="mt-[18px] flex gap-[8px]">
