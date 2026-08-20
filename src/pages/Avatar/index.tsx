@@ -17,6 +17,7 @@ import {
   saveCurrentAvatar,
 } from '@/utils/avatarStorage';
 import HomeLogo from '@/components/common/HomeLogo';
+import { avatarDisplayName } from '@/utils/avatarName';
 
 const formatCreatedDate = (
   createdAt?: string | null,
@@ -66,17 +67,6 @@ const statusLabelMap: Record<
 /** 서버가 받는 이름 길이 상한. RequestAvatarNameDto 의 컬럼 길이와 같습니다. */
 const NAME_MAX = 50;
 
-/**
- * 화면에 부를 이름.
- *
- * 이름을 붙이지 않은 아바타는 순번으로 부릅니다. 순번은 저장된 값이 아니라
- * 목록에서의 위치라, 앞의 것을 지우면 뒤 번호가 당겨집니다. 이름을 붙이면
- * 그 문제가 사라지는 것이 이 기능의 쓸모이기도 합니다.
- */
-const displayName = (
-  item: { name?: string | null },
-  index: number,
-) => item.name?.trim() || `아바타 ${index + 1}`;
 
 const Avatar = () => {
   const navigate = useNavigate();
@@ -176,7 +166,7 @@ const Avatar = () => {
     ) ?? null;
 
   const checkedLabel = checkedAvatar
-    ? displayName(
+    ? avatarDisplayName(
         checkedAvatar,
         sortedAvatars.indexOf(
           checkedAvatar,
@@ -347,7 +337,7 @@ const Avatar = () => {
     );
 
   const currentName = avatar
-    ? displayName(
+    ? avatarDisplayName(
         avatar,
         selectedIndex,
       )
@@ -652,7 +642,7 @@ const Avatar = () => {
                         >
                           {item.avatarId !=
                           null
-                            ? displayName(
+                            ? avatarDisplayName(
                                 item,
                                 index,
                               )

@@ -17,6 +17,7 @@ import { getFittingResult } from '@/api/fitting';
 import { getGarments } from '@/api/garment';
 
 import ThreeViewer from '@/components/viewer/ThreeViewer';
+import { avatarDisplayName } from '@/utils/avatarName';
 import VoiceAssistant from '@/components/voice/VoiceAssistant';
 
 import {
@@ -1446,9 +1447,11 @@ const Fitting = () => {
                                     'Inter, sans-serif',
                                 }}
                               >
-                                나의 아바타{' '}
-                                {index +
-                                  1}
+                                {avatarDisplayName(
+                                  avatar,
+                                  index,
+                                  '나의 아바타',
+                                )}
                               </p>
 
                               <p
