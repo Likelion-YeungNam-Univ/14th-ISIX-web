@@ -1,29 +1,67 @@
 import { apiClient } from './client';
-import type { ApiResponse } from '@/types/api';
-import type { FittingResponse, Garment } from '@/types/fitting';
 
-export const getGarments = async (): Promise<Garment[]> => {
-  const { data } = await apiClient.get<ApiResponse<{ garments: Garment[] }>>(
-    '/api/v1/garments',
+import type { ApiResponse } from '@/types/api';
+import type {
+  FittingRecordDetail,
+  FittingRecordList,
+  FittingResult,
+} from '@/types/fitting';
+
+/**
+ * 선택한 아바타와 의류의 s/m/l 피팅 결과 조회
+ */
+export const getFittingResult = async (
+  avatarId: number,
+  garmentId: number,
+): Promise<FittingResult> => {
+  const { data } = await apiClient.get<
+    ApiResponse<FittingResult>
+  >(
+    `/api/v1/avatars/${avatarId}/garments/${garmentId}/fit`,
   );
-  return data.data!.garments;
+
+  return data.data!;
 };
 
 /**
- * 가상 피팅 결과 조회.
- *
- * 사전 계산된 결과를 꺼내오므로 1초 이내에 응답합니다.
- * 배치 시뮬레이션에서 실패한 조합은 FITTING_NOT_AVAILABLE 이 반환됩니다.
+ * 현재 세션의 저장된 피팅 기록 목록 조회
  */
-export const getFitting = async (
-  avatarId: string,
-  garmentId: string,
-  size: string,
-): Promise<FittingResponse> => {
-  const { data } = await apiClient.post<ApiResponse<FittingResponse>>('/api/v1/fittings', {
-    avatarId,
-    garmentId,
-    size,
-  });
-  return data.data!;
+export const getMyFittings =
+  async (): Promise<FittingRecordList> => {
+    const { data } = await apiClient.get<
+      ApiResponse<FittingRecordList>
+    >('/api/v1/fittings/me');
+
+    return data.data ?? { fittings: [] };
+  };
+
+/**
+ * 저장된 피팅 기록 상세 조회
+ */
+export const getFittingRecord = async (
+  fittingId: number,
+): Promise<FittingRecordDetail> => {
+  const { data } = await apiClient.get<
+    ApiResponse<FittingRecordDetail>
+  >(`/api/v1/fittings/${fittingId}`);
+
+  if (!data.data) {
+    throw new Error(
+      '피팅 기록을 불러오지 못했습니다.',
+    );
+  }
+
+  return data.data;
+};
+
+
+/**
+ * 저장된 피팅 기록 삭제
+ */
+export const deleteFitting = async (
+  fittingId: number,
+): Promise<void> => {
+  await apiClient.delete(
+    `/api/v1/fittings/${fittingId}`,
+  );
 };

@@ -16,7 +16,6 @@ export default {
         fit: {
           loose: '#2E86C1',
           good: '#27AE60',
-          snug: '#D68910',
           tight: '#C0392B',
         },
       },

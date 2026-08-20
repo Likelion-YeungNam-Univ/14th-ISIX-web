@@ -14,9 +14,9 @@
 
 ## ✂️ Team
 
-|                                                              P&D                                                              |                                                            FE                                                            |                                                           FE                                                           |                                                             AI                                                             |                                                            BE                                                            |                                                             BE                                                             |
-| :---------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------: |
-| <img src="https://avatars.githubusercontent.com/knayoung0" height="100"/> <br> [구나영](https://github.com/knayoung0) | <img src="https://avatars.githubusercontent.com/copepb" height="100"/> <br> [김민호](https://github.com/copepb) | <img src="https://avatars.githubusercontent.com/hyeonseo-sung" height="100"/> <br> [성현서](https://github.com/hyeonseo-sung) | <img src="https://avatars.githubusercontent.com/ryudayeong" height="100"/> <br> [류다영](https://github.com/ryudayeong) | <img src="https://avatars.githubusercontent.com/ckrhkdwls" height="100"/> <br> [차광진](https://github.com/ckrhkdwls) | <img src="https://avatars.githubusercontent.com/user070917" height="100"/> <br> [황연준](https://github.com/user070917) |
+| P&D | FE | FE | FE · AI | BE · AI | BE |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| <img src="https://avatars.githubusercontent.com/hyeonseo-sung" height="100"/> <br> [성현서](https://github.com/hyeonseo-sung) | <img src="https://avatars.githubusercontent.com/knayoung0" height="100"/> <br> [구나영](https://github.com/knayoung0) | <img src="https://avatars.githubusercontent.com/copepb" height="100"/> <br> [김민호](https://github.com/copepb) | <img src="https://avatars.githubusercontent.com/user070917" height="100"/> <br> [황연준](https://github.com/user070917) | <img src="https://avatars.githubusercontent.com/ryudayeong" height="100"/> <br> [류다영](https://github.com/ryudayeong) | <img src="https://avatars.githubusercontent.com/ckrhkdwls" height="100"/> <br> [차광진](https://github.com/ckrhkdwls) |
 
 <!-- 단체 사진이 있으면 여기에 추가하세요 -->
 
@@ -111,14 +111,14 @@ fix: 목둘레 계측 실패 수정
 
 | 브랜치 | 역할 |
 | ------ | ---- |
-| **main** | 배포 가능한 상태만 유지 |
-| **dev**  | 개발 통합 브랜치. 항상 최신 상태 유지 |
-| **작업 브랜치** | dev 에서 분기해 기능 단위로 작업 |
+| **main** | 배포 브랜치. Vercel 프로덕션이 이 브랜치를 배포합니다. 검증된 상태만 올립니다 |
+| **develop**  | 개발 통합 브랜치. 항상 최신 상태 유지 |
+| **작업 브랜치** | develop 에서 분기해 기능 단위로 작업 |
 
-- 모든 작업은 dev 에서 분기한 브랜치에서 진행합니다
-- 이슈 생성 → 브랜치 생성 → 개발 완료 후 dev 로 PR
-- 리뷰·테스트를 거쳐 main 으로 PR
-- **PR 전에** 로컬 dev 를 pull 해 최신 상태로 맞추고, 작업 브랜치에서 merge 해 conflict 를 해결한 뒤 push 합니다
+- 모든 작업은 develop 에서 분기한 브랜치에서 진행합니다
+- 이슈 생성 → 브랜치 생성 → 개발 완료 후 develop 으로 PR
+- 리뷰·빌드 확인을 거쳐 main 으로 PR 하고, 그 머지가 배포를 일으킵니다
+- **PR 전에** 로컬 develop 을 pull 해 최신 상태로 맞추고, 작업 브랜치에서 merge 해 conflict 를 해결한 뒤 push 합니다
 
 <br>
 
