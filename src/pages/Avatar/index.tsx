@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { getGarments } from '@/api/garment';
 import { getMyAvatars } from '@/api/avatar';
 import ThreeViewer from '@/components/viewer/ThreeViewer';
+import VoiceAssistant from '@/components/voice/VoiceAssistant';
 import type { AvatarJob } from '@/types/avatar';
 import {
   getCurrentAvatar,
@@ -875,6 +876,8 @@ const Avatar = () => {
           )}
         </div>
       </div>
+
+      <VoiceAssistant mode="onboarding" />
     </main>
   );
 };
