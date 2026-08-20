@@ -36,6 +36,7 @@ import type {
 } from '@/types/chat';
 import type { LikedGarment } from '@/types/like';
 import { getCurrentAvatar } from '@/utils/avatarStorage';
+import VoiceAssistant from '@/components/voice/VoiceAssistant';
 import HomeLogo from '@/components/common/HomeLogo';
 
 type MyTab = 'fitting' | 'report';
@@ -1119,6 +1120,8 @@ const My = () => {
           </div>,
           document.body,
         )}
+
+      <VoiceAssistant mode="onboarding" />
 </main>
   );
 };
