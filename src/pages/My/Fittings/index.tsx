@@ -3,10 +3,17 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
-import { getMyFittings } from '@/api/fitting';
+import {
+  deleteFitting,
+  getMyFittings,
+} from '@/api/fitting';
 import { getGarments } from '@/api/garment';
 import HomeLogo from '@/components/common/HomeLogo';
 
@@ -15,8 +22,15 @@ const MAX_VISIBLE_PAGES = 6;
 
 const MyFittings = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [page, setPage] = useState(1);
+  const [isSelectMode, setIsSelectMode] =
+    useState(false);
+  const [
+    selectedFittingIds,
+    setSelectedFittingIds,
+  ] = useState<number[]>([]);
 
   const {
     data: fittingData,
@@ -110,6 +124,69 @@ const MyFittings = () => {
         garmentId,
     );
 
+  const toggleFittingSelection = (
+    fittingId: number,
+  ) => {
+    setSelectedFittingIds((prev) =>
+      prev.includes(fittingId)
+        ? prev.filter(
+            (id) => id !== fittingId,
+          )
+        : [...prev, fittingId],
+    );
+  };
+
+  const deleteFittingsMutation =
+    useMutation({
+      mutationFn: async (
+        fittingIds: number[],
+      ) => {
+        await Promise.all(
+          fittingIds.map((fittingId) =>
+            deleteFitting(fittingId),
+          ),
+        );
+      },
+
+      onSuccess: () => {
+        setSelectedFittingIds([]);
+        setIsSelectMode(false);
+      },
+
+      onError: () => {
+        window.alert(
+          '피팅 기록을 삭제하지 못했습니다. 다시 시도해 주세요.',
+        );
+      },
+
+      onSettled: () => {
+        void queryClient.invalidateQueries({
+          queryKey: ['my-fittings'],
+        });
+      },
+    });
+
+  const handleDeleteSelected = () => {
+    if (
+      selectedFittingIds.length === 0 ||
+      deleteFittingsMutation.isPending
+    ) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `선택한 피팅 ${selectedFittingIds.length}개를 삭제하시겠습니까?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    deleteFittingsMutation.mutate(
+      selectedFittingIds,
+    );
+  };
+
   return (
     <main className="min-h-[100dvh] bg-[#090909] text-[#F0EBE2]">
       <div className="mx-auto min-h-[100dvh] w-[402px] max-w-full overflow-x-hidden bg-[#090909]">
@@ -153,7 +230,7 @@ const MyFittings = () => {
           </h1>
         </div>
 
-        {/* 개수 */}
+        {/* 전체 피팅 / 개수 / 선택 */}
         <div className="flex h-[45px] items-center justify-between px-[10px]">
           <h2
             className="text-[15px] font-semibold leading-[16.5px] tracking-[1.32px] text-[#9A9490]"
@@ -165,15 +242,51 @@ const MyFittings = () => {
             전체 피팅
           </h2>
 
-          <span
-            className="text-[10px] font-normal leading-[15px] text-[#C9A96E]"
-            style={{
-              fontFamily:
-                '"DM Mono", monospace',
-            }}
-          >
-            {fittings.length}개
-          </span>
+          <div className="flex items-center gap-[8px]">
+            <span
+              className="text-[10px] font-normal leading-[15px] text-[#C9A96E]"
+              style={{
+                fontFamily:
+                  '"DM Mono", monospace',
+              }}
+            >
+              {fittings.length}개
+            </span>
+
+            {!isSelectMode ? (
+              <button
+                type="button"
+                disabled={
+                  fittings.length === 0
+                }
+                onClick={() => {
+                  setSelectedFittingIds(
+                    [],
+                  );
+                  setIsSelectMode(true);
+                }}
+                className="flex h-[20px] items-center justify-center rounded-[10px] bg-[#E4B662] px-[7px] text-[8px] font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                선택
+              </button>
+            ) : (
+              <button
+                type="button"
+                aria-label="선택한 피팅 삭제"
+                disabled={
+                  selectedFittingIds.length ===
+                    0 ||
+                  deleteFittingsMutation.isPending
+                }
+                onClick={
+                  handleDeleteSelected
+                }
+                className="flex h-[20px] w-[20px] items-center justify-center rounded-full bg-[#E4B662] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <DeleteFittingIcon />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Loading */}
@@ -245,6 +358,17 @@ const MyFittings = () => {
                           garment?.thumbnailUrl ??
                           null
                         }
+                        selectMode={
+                          isSelectMode
+                        }
+                        selected={selectedFittingIds.includes(
+                          fitting.fittingId,
+                        )}
+                        onSelect={() =>
+                          toggleFittingSelection(
+                            fitting.fittingId,
+                          )
+                        }
                         onRetry={() =>
                           navigate(
                             '/fitting',
@@ -300,18 +424,59 @@ type FittingCardProps = {
     wearable: boolean;
   };
   thumbnailUrl: string | null;
+  selectMode: boolean;
+  selected: boolean;
+  onSelect: () => void;
   onRetry: () => void;
 };
 
 function FittingCard({
   fitting,
   thumbnailUrl,
+  selectMode,
+  selected,
+  onSelect,
   onRetry,
 }: FittingCardProps) {
   return (
-    <article className="h-[285px] w-[185px] overflow-hidden rounded-[8px] border-[0.7px] border-white/[0.07] bg-[#141414]">
+    <article
+      className={[
+        'h-[285px] w-[185px] overflow-hidden rounded-[8px] border-[0.7px] bg-[#141414]',
+        selected
+          ? 'border-[#E4B662]'
+          : 'border-white/[0.07]',
+      ].join(' ')}
+    >
       {/* Image */}
       <div className="relative h-[180px] w-[184px] overflow-hidden bg-[#F3F3F3]">
+        {selectMode && (
+          <>
+            <button
+              type="button"
+              aria-label={
+                selected
+                  ? '피팅 선택 해제'
+                  : '피팅 선택'
+              }
+              onClick={onSelect}
+              className="absolute inset-0 z-10"
+            />
+
+            <div
+              className={[
+                'pointer-events-none absolute right-[8px] top-[8px] z-20 flex h-[17px] w-[17px] items-center justify-center rounded-full border',
+                selected
+                  ? 'border-[#E4B662] bg-[#E4B662]'
+                  : 'border-[#E4B662] bg-black/20',
+              ].join(' ')}
+            >
+              {selected && (
+                <CheckIcon className="h-[9px] w-[9px]" />
+              )}
+            </div>
+          </>
+        )}
+
         {thumbnailUrl ? (
           <img
             src={thumbnailUrl}
@@ -389,8 +554,9 @@ function FittingCard({
         <div className="mt-[7px] flex gap-[5px]">
           <button
             type="button"
+            disabled={selectMode}
             onClick={onRetry}
-            className="flex h-[31px] w-[82px] items-center justify-center gap-[3px] rounded-[4px] bg-[#C9A96E] text-[#0D0A05]"
+            className="flex h-[31px] w-[82px] items-center justify-center gap-[3px] rounded-[4px] bg-[#C9A96E] text-[#0D0A05] disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ShirtIcon className="h-[12px] w-[12px]" />
 
@@ -524,6 +690,48 @@ function FittingCardSkeleton() {
 /* ==================================================== */
 /* Icons                                                */
 /* ==================================================== */
+
+function DeleteFittingIcon() {
+  return (
+    <svg
+      width="10"
+      height="11"
+      viewBox="0 0 10 11"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M9.58333 1.69231H7.5V1.26923C7.5 0.93261 7.3683 0.609776 7.13388 0.371749C6.89946 0.133722 6.58152 0 6.25 0H3.75C3.41848 0 3.10054 0.133722 2.86612 0.371749C2.6317 0.609776 2.5 0.93261 2.5 1.26923V1.69231H0.416667C0.30616 1.69231 0.200179 1.73688 0.122039 1.81622C0.0438988 1.89557 0 2.00318 0 2.11538C0 2.22759 0.0438988 2.3352 0.122039 2.41455C0.200179 2.49389 0.30616 2.53846 0.416667 2.53846H0.833333V10.1538C0.833333 10.3783 0.921131 10.5935 1.07741 10.7522C1.23369 10.9109 1.44565 11 1.66667 11H8.33333C8.55435 11 8.76631 10.9109 8.92259 10.7522C9.07887 10.5935 9.16667 10.3783 9.16667 10.1538V2.53846H9.58333C9.69384 2.53846 9.79982 2.49389 9.87796 2.41455C9.9561 2.3352 10 2.22759 10 2.11538C10 2.00318 9.9561 1.89557 9.87796 1.81622C9.79982 1.73688 9.69384 1.69231 9.58333 1.69231ZM4.16667 8.03846C4.16667 8.15067 4.12277 8.25828 4.04463 8.33762C3.96649 8.41696 3.86051 8.46154 3.75 8.46154C3.63949 8.46154 3.53351 8.41696 3.45537 8.33762C3.37723 8.25828 3.33333 8.15067 3.33333 8.03846V4.65385C3.33333 4.54164 3.37723 4.43403 3.45537 4.35469C3.53351 4.27534 3.63949 4.23077 3.75 4.23077C3.86051 4.23077 3.96649 4.27534 4.04463 4.35469C4.12277 4.43403 4.16667 4.54164 4.16667 4.65385V8.03846ZM6.66667 8.03846C6.66667 8.15067 6.62277 8.25828 6.54463 8.33762C6.46649 8.41696 6.36051 8.46154 6.25 8.46154C6.13949 8.46154 6.03351 8.41696 5.95537 8.33762C5.87723 8.25828 5.83333 8.15067 5.83333 8.03846V4.65385C5.83333 4.54164 5.87723 4.43403 5.95537 4.35469C6.03351 4.27534 6.13949 4.23077 6.25 4.23077C6.36051 4.23077 6.46649 4.27534 6.54463 4.35469C6.62277 4.43403 6.66667 4.54164 6.66667 4.65385V8.03846ZM6.66667 1.69231H3.33333V1.26923C3.33333 1.15702 3.37723 1.04941 3.45537 0.97007C3.53351 0.890728 3.63949 0.846154 3.75 0.846154H6.25C6.36051 0.846154 6.46649 0.890728 6.54463 0.97007C6.62277 1.04941 6.66667 1.15702 6.66667 1.26923V1.69231Z"
+        fill="black"
+        fillOpacity={0.8}
+      />
+    </svg>
+  );
+}
+
+function CheckIcon({
+  className,
+}: {
+  className?: string;
+}) {
+  return (
+    <svg
+      viewBox="0 0 12 12"
+      fill="none"
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        d="M2.5 6.1 4.8 8.3 9.5 3.7"
+        stroke="white"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 function BellIcon({
   className,

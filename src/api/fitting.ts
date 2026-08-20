@@ -53,3 +53,15 @@ export const getFittingRecord = async (
 
   return data.data;
 };
+
+
+/**
+ * 저장된 피팅 기록 삭제
+ */
+export const deleteFitting = async (
+  fittingId: number,
+): Promise<void> => {
+  await apiClient.delete(
+    `/api/v1/fittings/${fittingId}`,
+  );
+};
