@@ -70,3 +70,13 @@ export const deleteAvatar = async (
     `/api/v1/avatars/${avatarId}`,
   );
 };
+/** 아바타 이름을 바꿉니다. 서버 제약은 비어있지 않은 50자 이하입니다. */
+export const updateAvatarName = async (
+  avatarId: number,
+  newName: string,
+): Promise<void> => {
+  await apiClient.patch(
+    `/api/v1/avatars/${avatarId}`,
+    { newName },
+  );
+};
