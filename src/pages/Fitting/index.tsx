@@ -85,6 +85,30 @@ const formatGarmentCategory = (
   return labels[normalized] ?? category;
 };
 
+const measurementLabelMap: Record<
+  string,
+  string
+> = {
+  shoulder_width: '어깨 너비',
+  chest_circ: '가슴 둘레',
+  waist_circ: '허리 둘레',
+  hip_circ: '엉덩이 둘레',
+  neck_circ: '목 둘레',
+  arm_circ: '팔 둘레',
+  thigh_circ: '허벅지 둘레',
+  back_length: '등 길이',
+  sleeve_length: '팔 길이',
+  inseam: '안쪽 다리길이',
+  total_length: '전체 길이',
+  front_width: '앞 너비',
+};
+
+const formatMeasurementLabel = (
+  measurement: string,
+) =>
+  measurementLabelMap[measurement] ??
+  measurement;
+
 const Fitting = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -411,8 +435,6 @@ const Fitting = () => {
         setSelectedSize(null);
         setVertexEase([]);
         setColorScale(undefined);
-    setBodyClass(undefined);
-      setBodyClass(undefined);
         setBodyClass(undefined);
         setShowHeatmap(false);
 
@@ -497,7 +519,7 @@ const Fitting = () => {
     if (!easeUrl) {
       setVertexEase([]);
       setColorScale(undefined);
-    setBodyClass(undefined);
+      setBodyClass(undefined);
       return;
     }
 
@@ -1022,7 +1044,7 @@ const Fitting = () => {
 
 
         
-          {/* <section className="px-[19px] pb-[18px] pt-[4px]">
+          <section className="px-[19px] pb-[18px] pt-[4px]">
             {fittingResult &&
               selectedGarment &&
               selectedSize &&
@@ -1092,7 +1114,7 @@ const Fitting = () => {
 
                         <div className="mt-[3px] flex items-end gap-[7px]">
                           <span
-                            className="text-[34px] font-semibold leading-none text-[#C9B27A]"
+                            className="text-[34px] font-semibold leading-none text-[#E4B662]"
                             style={{
                               fontFamily:
                                 'Inter, sans-serif',
@@ -1199,7 +1221,9 @@ const Fitting = () => {
                                       'Inter, sans-serif',
                                   }}
                                 >
-                                  {part.part}
+                                  {formatMeasurementLabel(
+                                    part.part,
+                                  )}
                                 </span>
                               </div>
 
@@ -1236,7 +1260,7 @@ const Fitting = () => {
                   )}
                 </div>
               )}
-          </section> */}
+          </section>
          
       </div>
 
@@ -1726,7 +1750,7 @@ const Fitting = () => {
                                     >
                                       추천
                                       사이즈는{' '}
-                                      <span className="font-semibold text-[#C9A96E]">
+                                      <span className="font-semibold text-[#E4B662]">
                                         {fittingResult.recommendedSize.toUpperCase()}
                                       </span>
                                       입니다.
