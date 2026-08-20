@@ -5,6 +5,10 @@ import {
   useState,
 } from 'react';
 
+type FacingMode =
+  | 'user'
+  | 'environment';
+
 interface CameraCaptureProps {
   onCapture: (file: File) => void;
   onCancel: () => void;
@@ -34,6 +38,18 @@ const CameraCapture = ({
     cameraError,
     setCameraError,
   ] = useState('');
+
+  const [
+    facingMode,
+    setFacingMode,
+  ] = useState<FacingMode>(
+    'environment',
+  );
+
+  const [
+    canSwitchCamera,
+    setCanSwitchCamera,
+  ] = useState(false);
 
   /* ================================================ */
   /* CAMERA CONTROL                                   */
@@ -93,7 +109,7 @@ const CameraCapture = ({
               video: {
                 facingMode: {
                   ideal:
-                    'environment',
+                    facingMode,
                 },
               },
               audio: false,
@@ -117,6 +133,29 @@ const CameraCapture = ({
 
         streamRef.current =
           newStream;
+
+        try {
+          const devices =
+            await navigator.mediaDevices.enumerateDevices();
+
+          const cameraCount =
+            devices.filter(
+              (device) =>
+                device.kind ===
+                'videoinput',
+            ).length;
+
+          setCanSwitchCamera(
+            cameraCount > 1,
+          );
+        } catch (error) {
+          console.error(
+            '카메라 목록 조회 실패:',
+            error,
+          );
+
+          setCanSwitchCamera(false);
+        }
 
         if (
           videoRef.current
@@ -197,7 +236,10 @@ const CameraCapture = ({
           );
         }
       }
-    }, [stopCamera]);
+    }, [
+      facingMode,
+      stopCamera,
+    ]);
 
   useEffect(() => {
     void startCamera();
@@ -293,6 +335,23 @@ const CameraCapture = ({
       );
     };
 
+  const handleSwitchCamera =
+    () => {
+      if (
+        isStarting ||
+        !canSwitchCamera
+      ) {
+        return;
+      }
+
+      setFacingMode(
+        (current) =>
+          current === 'environment'
+            ? 'user'
+            : 'environment',
+      );
+    };
+
   const handleCancel =
     () => {
       stopCamera();
@@ -366,8 +425,28 @@ const CameraCapture = ({
           autoPlay
           playsInline
           muted
-          className="h-full min-h-[500px] w-full object-cover"
+          className={[
+            'h-full min-h-[500px] w-full object-cover',
+            facingMode === 'user'
+              ? '-scale-x-100'
+              : '',
+          ].join(' ')}
         />
+
+        {canSwitchCamera &&
+          !cameraError && (
+            <button
+              type="button"
+              onClick={
+                handleSwitchCamera
+              }
+              disabled={isStarting}
+              aria-label="전면 후면 카메라 전환"
+              className="absolute right-[30px] top-[30px] z-30 flex h-[40px] w-[40px] items-center justify-center rounded-full border border-white/15 bg-black/55 text-white backdrop-blur-[6px] transition disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <SwitchCameraIcon className="h-[21px] w-[21px]" />
+            </button>
+          )}
 
         {/* GUIDE BORDER */}
 
@@ -517,6 +596,69 @@ function BackIcon({
         strokeWidth="1.7"
         strokeLinecap="round"
         strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function SwitchCameraIcon({
+  className,
+}: {
+  className?: string;
+}) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        d="M7 7H16.5L14.2 4.7"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      <path
+        d="M17 17H7.5L9.8 19.3"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      <path
+        d="M18.5 8.5C18.83 9.27 19 10.1 19 11"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+
+      <path
+        d="M5.5 15.5C5.17 14.73 5 13.9 5 13"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+
+      <rect
+        x="8"
+        y="9"
+        width="8"
+        height="6"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+
+      <circle
+        cx="12"
+        cy="12"
+        r="1.5"
+        stroke="currentColor"
+        strokeWidth="1.3"
       />
     </svg>
   );
