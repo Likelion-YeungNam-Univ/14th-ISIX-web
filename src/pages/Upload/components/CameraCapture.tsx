@@ -5,6 +5,23 @@ import {
   useState,
 } from 'react';
 
+type TimerSeconds =
+  | 0
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5;
+
+const TIMER_OPTIONS: TimerSeconds[] = [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+];
+
 type FacingMode =
   | 'user'
   | 'environment';
@@ -38,6 +55,21 @@ const CameraCapture = ({
     cameraError,
     setCameraError,
   ] = useState('');
+
+  const [
+    timerSeconds,
+    setTimerSeconds,
+  ] = useState<TimerSeconds>(0);
+
+  const [
+    countdown,
+    setCountdown,
+  ] = useState<number | null>(
+    null,
+  );
+
+  const isCountingDown =
+    countdown !== null;
 
   const [
     facingMode,
@@ -257,7 +289,7 @@ const CameraCapture = ({
   /* ================================================ */
 
   const handleCapture =
-    () => {
+    useCallback(() => {
       const video =
         videoRef.current;
 
@@ -333,7 +365,57 @@ const CameraCapture = ({
         'image/jpeg',
         0.92,
       );
+    }, [
+      onCapture,
+      stopCamera,
+    ]);
+
+  const handleCaptureClick =
+    () => {
+      if (
+        isStarting ||
+        cameraError ||
+        isCountingDown
+      ) {
+        return;
+      }
+
+      if (timerSeconds === 0) {
+        handleCapture();
+        return;
+      }
+
+      setCountdown(timerSeconds);
     };
+
+  useEffect(() => {
+    if (countdown === null) {
+      return;
+    }
+
+    if (countdown === 0) {
+      setCountdown(null);
+      handleCapture();
+      return;
+    }
+
+    const timerId =
+      window.setTimeout(() => {
+        setCountdown(
+          (current) =>
+            current === null
+              ? null
+              : current - 1,
+        );
+      }, 1000);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [
+    countdown,
+    handleCapture,
+  ]);
 
   const handleSwitchCamera =
     () => {
@@ -354,6 +436,7 @@ const CameraCapture = ({
 
   const handleCancel =
     () => {
+      setCountdown(null);
       stopCamera();
       onCancel();
     };
@@ -433,6 +516,21 @@ const CameraCapture = ({
           ].join(' ')}
         />
 
+        {countdown !== null &&
+          countdown > 0 && (
+            <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center bg-black/20">
+              <span
+                className="text-[78px] font-semibold leading-none text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.65)]"
+                style={{
+                  fontFamily:
+                    'Inter, sans-serif',
+                }}
+              >
+                {countdown}
+              </span>
+            </div>
+          )}
+
         {canSwitchCamera &&
           !cameraError && (
             <button
@@ -455,13 +553,13 @@ const CameraCapture = ({
             aria-hidden="true"
             className="pointer-events-none absolute inset-[18px] rounded-[10px] border border-white/25"
           >
-            <span className="absolute left-[-1px] top-[-1px] h-[32px] w-[32px] rounded-tl-[10px] border-l-2 border-t-2 border-[#C9A96E]" />
+            <span className="absolute left-[-1px] top-[-1px] h-[32px] w-[32px] rounded-tl-[10px] border-l-2 border-t-2 border-[#E4B662]" />
 
-            <span className="absolute right-[-1px] top-[-1px] h-[32px] w-[32px] rounded-tr-[10px] border-r-2 border-t-2 border-[#C9A96E]" />
+            <span className="absolute right-[-1px] top-[-1px] h-[32px] w-[32px] rounded-tr-[10px] border-r-2 border-t-2 border-[#E4B662]" />
 
-            <span className="absolute bottom-[-1px] left-[-1px] h-[32px] w-[32px] rounded-bl-[10px] border-b-2 border-l-2 border-[#C9A96E]" />
+            <span className="absolute bottom-[-1px] left-[-1px] h-[32px] w-[32px] rounded-bl-[10px] border-b-2 border-l-2 border-[#E4B662]" />
 
-            <span className="absolute bottom-[-1px] right-[-1px] h-[32px] w-[32px] rounded-br-[10px] border-b-2 border-r-2 border-[#C9A96E]" />
+            <span className="absolute bottom-[-1px] right-[-1px] h-[32px] w-[32px] rounded-br-[10px] border-b-2 border-r-2 border-[#E4B662]" />
           </div>
         )}
 
@@ -470,7 +568,7 @@ const CameraCapture = ({
         {isStarting &&
           !cameraError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/75">
-              <div className="h-[24px] w-[24px] animate-spin rounded-full border-2 border-white/20 border-t-[#C9A96E]" />
+              <div className="h-[24px] w-[24px] animate-spin rounded-full border-2 border-white/20 border-t-[#E4B662]" />
 
               <p
                 className="mt-[12px] text-[11px] text-[#9A9490]"
@@ -507,7 +605,7 @@ const CameraCapture = ({
               onClick={() =>
                 void startCamera()
               }
-              className="mt-[20px] h-[40px] rounded-[6px] border border-[#C9A96E]/50 px-[18px] text-[11px] font-medium text-[#C9A96E]"
+              className="mt-[20px] h-[40px] rounded-[6px] border border-[#E4B662]/50 px-[18px] text-[11px] font-medium text-[#E4B662]"
             >
               다시 시도
             </button>
@@ -520,6 +618,72 @@ const CameraCapture = ({
       {/* ============================================ */}
 
       <div className="pb-[12px] pt-[20px]">
+        <div className="mb-[16px]">
+          <div className="mb-[8px] flex items-center justify-between">
+            <span
+              className="text-[10px] font-medium text-[#9A9490]"
+              style={{
+                fontFamily:
+                  'Inter, sans-serif',
+              }}
+            >
+              촬영 타이머
+            </span>
+
+            <span
+              className="text-[10px] text-[#E4B662]"
+              style={{
+                fontFamily:
+                  '"DM Mono", monospace',
+              }}
+            >
+              {timerSeconds}초
+            </span>
+          </div>
+
+          <div className="grid grid-cols-6 gap-[6px]">
+            {TIMER_OPTIONS.map(
+              (seconds) => {
+                const isSelected =
+                  timerSeconds ===
+                  seconds;
+
+                return (
+                  <button
+                    key={seconds}
+                    type="button"
+                    disabled={
+                      isStarting ||
+                      isCountingDown
+                    }
+                    onClick={() =>
+                      setTimerSeconds(
+                        seconds,
+                      )
+                    }
+                    className={[
+                      'h-[34px] rounded-[7px] border text-[10px] font-medium transition',
+                      isSelected
+                        ? 'border-[#E4B662] bg-[#E4B662] text-[#13100A]'
+                        : 'border-white/[0.09] bg-[#141414] text-[#9A9490]',
+                      isStarting ||
+                      isCountingDown
+                        ? 'cursor-not-allowed opacity-45'
+                        : '',
+                    ].join(' ')}
+                    style={{
+                      fontFamily:
+                        'Inter, sans-serif',
+                    }}
+                  >
+                    {seconds}초
+                  </button>
+                );
+              },
+            )}
+          </div>
+        </div>
+
         <p
           className="mb-[13px] text-center text-[9px] leading-[14px] text-[#77716E]"
           style={{
@@ -549,22 +713,25 @@ const CameraCapture = ({
           <button
             type="button"
             onClick={
-              handleCapture
+              handleCaptureClick
             }
             disabled={
               isStarting ||
               Boolean(
                 cameraError,
-              )
+              ) ||
+              isCountingDown
             }
-            className="flex h-[52px] items-center justify-center gap-[8px] rounded-[8px] bg-[#C9A96E] text-[13px] font-semibold text-[#13100A] disabled:cursor-not-allowed disabled:bg-[#191919] disabled:text-[#44413F]"
+            className="flex h-[52px] items-center justify-center gap-[8px] rounded-[8px] bg-[#E4B662] text-[13px] font-semibold text-[#13100A] disabled:cursor-not-allowed disabled:bg-[#191919] disabled:text-[#44413F]"
             style={{
               fontFamily:
                 'Inter, sans-serif',
             }}
           >
             <CameraIcon className="h-[18px] w-[18px]" />
-            촬영하기
+            {isCountingDown
+              ? `${countdown}초 후 촬영`
+              : '촬영하기'}
           </button>
         </div>
       </div>

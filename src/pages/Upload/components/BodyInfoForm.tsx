@@ -50,7 +50,7 @@ const BodyInfoForm = ({
 
       <div className="flex items-center gap-[10px]">
         <span
-          className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full border border-[#C9A96E]/50 bg-[#C9A96E]/10 text-[10px] text-[#C9A96E]"
+          className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full border border-[#E4B662]/50 bg-[#E4B662]/10 text-[10px] text-[#E4B662]"
           style={{
             fontFamily:
               '"DM Mono", monospace',
@@ -105,7 +105,7 @@ const BodyInfoForm = ({
               'transition-colors',
               heightError
                 ? 'border border-red-400/70'
-                : 'border border-[#C9A96E]/40 focus:border-[#C9A96E]',
+                : 'border border-[#E4B662]/40 focus:border-[#E4B662]',
               '[appearance:textfield]',
               '[&::-webkit-inner-spin-button]:appearance-none',
               '[&::-webkit-outer-spin-button]:appearance-none',
@@ -161,7 +161,7 @@ const BodyInfoForm = ({
               'transition-colors',
               weightError
                 ? 'border border-red-400/70'
-                : 'border border-[#C9A96E]/40 focus:border-[#C9A96E]',
+                : 'border border-[#E4B662]/40 focus:border-[#E4B662]',
               '[appearance:textfield]',
               '[&::-webkit-inner-spin-button]:appearance-none',
               '[&::-webkit-outer-spin-button]:appearance-none',
