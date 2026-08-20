@@ -373,18 +373,13 @@ const Avatar = () => {
             </div>
           </div>
 
+          {/*
+            안내 문구는 두지 않습니다. 휴지통이 나타나고 카드에 체크가 붙는
+            것으로 무엇을 하는 화면인지 충분히 드러납니다. 빠져나갈 길은
+            있어야 하므로 취소만 남깁니다.
+          */}
           {isSelectMode && (
-            <div className="mt-[10px] flex items-center justify-between">
-              <p
-                className="text-[11px] text-[#9A9490]"
-                style={{
-                  fontFamily:
-                    'Inter, sans-serif',
-                }}
-              >
-                지울 아바타를 선택해 주세요.
-              </p>
-
+            <div className="mt-[10px] flex justify-end">
               <button
                 type="button"
                 onClick={exitSelectMode}
