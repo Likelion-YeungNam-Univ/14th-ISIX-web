@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { getGarmentDetail } from '@/api/garment';
 import { getMyAvatars } from '@/api/avatar';
+import { avatarDisplayName } from '@/utils/avatarName';
 import {
   getMyLikes,
   likeGarment,
@@ -606,7 +607,7 @@ const ProductCard = ({ garment }: Props) => {
                             'text-[11px] font-medium',
                             isSelcted ? 'text-[#C9A96E]' : 'text-[#303030]',
                           ].join(' ')}>
-                            아바타 {index + 1}
+                            {avatarDisplayName(avatar, index)}
                           </span>
 
                           <span className="text-[9px] text-[#4A4A4A]">
