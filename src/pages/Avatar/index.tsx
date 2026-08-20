@@ -3,11 +3,15 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
 import { getGarments } from '@/api/garment';
-import { getMyAvatars } from '@/api/avatar';
+import {
+  deleteAvatar,
+  getMyAvatars,
+} from '@/api/avatar';
 import ThreeViewer from '@/components/viewer/ThreeViewer';
 import VoiceAssistant from '@/components/voice/VoiceAssistant';
 import type { AvatarJob } from '@/types/avatar';
 import {
+  clearCurrentAvatar,
   getCurrentAvatar,
   saveCurrentAvatar,
 } from '@/utils/avatarStorage';
@@ -82,6 +86,30 @@ const Avatar = () => {
   const [loadError, setLoadError] =
     useState<string | null>(null);
 
+  /*
+   * 삭제 흐름.
+   *
+   * "선택" 을 누르면 고르는 모드로 들어가고, 카드를 눌러 지울 아바타를
+   * 표시한 뒤 휴지통으로 지웁니다. 고르는 모드에서는 카드를 눌러도 사용
+   * 아바타가 바뀌지 않습니다 — 지우려다 현재 아바타를 갈아치우면 안 됩니다.
+   */
+  const [isSelectMode, setIsSelectMode] =
+    useState(false);
+
+  const [checkedId, setCheckedId] =
+    useState<number | null>(null);
+
+  const [isDeleting, setIsDeleting] =
+    useState(false);
+
+  const [deleteError, setDeleteError] =
+    useState<string | null>(null);
+
+  const [
+    isConfirmOpen,
+    setIsConfirmOpen,
+  ] = useState(false);
+
   const sortedAvatars = [...avatars].sort(
     (a, b) =>
       (a.avatarId ?? 0) -
@@ -105,6 +133,65 @@ const Avatar = () => {
     void loadAvatars();
   }, []);
 
+  const exitSelectMode = () => {
+    setIsSelectMode(false);
+    setCheckedId(null);
+    setDeleteError(null);
+    setIsConfirmOpen(false);
+  };
+
+  const checkedAvatar =
+    sortedAvatars.find(
+      (item) =>
+        item.avatarId === checkedId,
+    ) ?? null;
+
+  const checkedLabel = checkedAvatar
+    ? `아바타 ${
+        sortedAvatars.indexOf(
+          checkedAvatar,
+        ) + 1
+      }`
+    : '';
+
+  const handleDelete = async () => {
+    if (checkedId == null || isDeleting) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      await deleteAvatar(checkedId);
+
+      setAvatars((prev) =>
+        prev.filter(
+          (item) =>
+            item.avatarId !== checkedId,
+        ),
+      );
+
+      // 지운 것이 지금 쓰는 아바타면 선택을 비웁니다. 안 비우면 피팅룸이
+      // 사라진 아바타를 계속 붙들고 GLB 를 부르러 갑니다.
+      if (
+        avatar?.avatarId === checkedId
+      ) {
+        clearCurrentAvatar();
+        setAvatar(null);
+      }
+
+      exitSelectMode();
+    } catch {
+      setDeleteError(
+        '아바타를 삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+      );
+      setIsConfirmOpen(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleSelectAvatar = (
     selectedAvatar: AvatarJob,
   ) => {
@@ -112,6 +199,16 @@ const Avatar = () => {
       selectedAvatar.status !== 'done' ||
       selectedAvatar.avatarId == null
     ) {
+      return;
+    }
+
+    // 고르는 모드에서는 지울 대상만 바꿉니다. 같은 것을 다시 누르면 해제합니다.
+    if (isSelectMode) {
+      const id = selectedAvatar.avatarId;
+      setCheckedId((prev) =>
+        prev === id ? null : id,
+      );
+      setDeleteError(null);
       return;
     }
 
@@ -221,16 +318,93 @@ const Avatar = () => {
               나의 아바타
             </h1>
 
-            <span
-              className="text-[10px] text-[#9A9490]"
+            <div className="flex items-center gap-[10px]">
+              <span
+                className="text-[10px] text-[#9A9490]"
+                style={{
+                  fontFamily:
+                    '"DM Mono", monospace',
+                }}
+              >
+                {avatars.length}개 저장됨
+              </span>
+
+              {avatars.length > 0 &&
+                (isSelectMode ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIsConfirmOpen(
+                        true,
+                      )
+                    }
+                    disabled={
+                      checkedId == null ||
+                      isDeleting
+                    }
+                    aria-label="선택한 아바타 삭제"
+                    className={[
+                      'flex h-[26px] w-[26px] items-center justify-center rounded-full transition-opacity',
+                      checkedId == null ||
+                      isDeleting
+                        ? 'bg-[#C9A96E]/30 text-[#0D0A05]/50'
+                        : 'bg-[#C9A96E] text-[#0D0A05]',
+                    ].join(' ')}
+                  >
+                    <TrashIcon className="h-[14px] w-[14px]" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIsSelectMode(
+                        true,
+                      )
+                    }
+                    className="h-[26px] rounded-full bg-[#C9A96E] px-[12px] text-[11px] font-semibold text-[#0D0A05]"
+                    style={{
+                      fontFamily:
+                        'Inter, sans-serif',
+                    }}
+                  >
+                    선택
+                  </button>
+                ))}
+            </div>
+          </div>
+
+          {/*
+            안내 문구는 두지 않습니다. 휴지통이 나타나고 카드에 체크가 붙는
+            것으로 무엇을 하는 화면인지 충분히 드러납니다. 빠져나갈 길은
+            있어야 하므로 취소만 남깁니다.
+          */}
+          {isSelectMode && (
+            <div className="mt-[10px] flex justify-end">
+              <button
+                type="button"
+                onClick={exitSelectMode}
+                className="text-[11px] text-[#9A9490] underline"
+                style={{
+                  fontFamily:
+                    'Inter, sans-serif',
+                }}
+              >
+                취소
+              </button>
+            </div>
+          )}
+
+          {deleteError && (
+            <p
+              className="mt-[10px] text-[12px] text-[#E5695C]"
               style={{
                 fontFamily:
-                  '"DM Mono", monospace',
+                  'Inter, sans-serif',
               }}
             >
-              {avatars.length}개 저장됨
-            </span>
-          </div>
+              {deleteError}
+            </p>
+          )}
 
           {isLoading && (
             <p
@@ -312,6 +486,14 @@ const Avatar = () => {
                     item.avatarId !=
                       null;
 
+                  // 지우려고 표시한 것. 사용 중 표시(isSelected)와 다릅니다.
+                  const isChecked =
+                    isSelectMode &&
+                    item.avatarId !=
+                      null &&
+                    checkedId ===
+                      item.avatarId;
+
                   return (
                     <button
                       key={item.jobId}
@@ -327,7 +509,9 @@ const Avatar = () => {
                       className={[
                         // py 가 없어서 아이콘이 카드 위 모서리에 1px 까지 붙어
                         // 있었습니다. 시안의 카드가 84x92 라 위아래 8px 씩 줍니다.
-                        'flex w-[84px] shrink-0 flex-col items-center gap-[8px] rounded-[16px] border-[0.714px] px-[14px] py-[8px] transition-colors',
+                        // relative 는 체크 배지를 카드 모서리에 붙이기 위한 것입니다.
+                        'relative flex w-[84px] shrink-0 flex-col items-center gap-[8px] rounded-[16px] border-[0.714px] px-[14px] py-[8px] transition-colors',
+                        isChecked ||
                         isSelected
                           ? 'border-[#C9A96E] bg-[#C9A96E]/10'
                           : 'border-white/10 bg-[#141414]',
@@ -336,6 +520,15 @@ const Avatar = () => {
                           : 'cursor-default opacity-50',
                       ].join(' ')}
                     >
+                      {isChecked && (
+                        <span
+                          aria-hidden="true"
+                          className="absolute right-[8px] top-[8px] flex h-[16px] w-[16px] items-center justify-center rounded-full bg-[#C9A96E] text-[#0D0A05]"
+                        >
+                          <CheckIcon className="h-[10px] w-[10px]" />
+                        </span>
+                      )}
+
                       <span
                         className={[
                           'flex h-[36px] w-[36px] items-center justify-center rounded-full',
@@ -879,12 +1072,137 @@ const Avatar = () => {
         </div>
       </div>
 
+      {/*
+        삭제 확인. 되돌릴 수 없는 동작이라 한 번 묻습니다.
+        window.confirm 을 쓰지 않은 것은 화면 톤과 어긋나고 아이폰 사파리에서
+        모양이 제각각이라서입니다.
+      */}
+      {isConfirmOpen && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 px-[32px]">
+          <div className="w-full max-w-[300px] rounded-[16px] border-[0.714px] border-white/10 bg-[#141414] p-[20px]">
+            {/*
+              조사를 붙이지 않습니다. "아바타 2" 는 "이" 로 읽어 "를" 이고
+              "아바타 3" 은 "삼" 이라 "을" 입니다. 번호마다 달라져서 한 가지로
+              고정하면 어느 쪽이든 틀립니다.
+            */}
+            <p
+              className="text-[14px] font-semibold text-[#F0EBE2]"
+              style={{
+                fontFamily:
+                  'Inter, sans-serif',
+              }}
+            >
+              {checkedLabel}
+            </p>
+
+            {/*
+              피팅 기록이 함께 지워지는 것을 반드시 알립니다.
+              백엔드가 아바타를 지울 때 그 아바타로 저장한 FittingRecord 도
+              같이 지웁니다. 아바타만 사라질 거라 생각하고 눌렀다가 MY 탭의
+              저장된 피팅이 통째로 없어지면 되돌릴 방법이 없습니다.
+            */}
+            <p
+              className="mt-[8px] text-[12px] leading-[18px] text-[#9A9490]"
+              style={{
+                fontFamily:
+                  'Inter, sans-serif',
+              }}
+            >
+              이 아바타로 저장한 피팅 기록도
+              <br />
+              함께 지워집니다. 되돌릴 수 없습니다.
+            </p>
+
+            <div className="mt-[18px] flex gap-[8px]">
+              <button
+                type="button"
+                onClick={() =>
+                  setIsConfirmOpen(false)
+                }
+                disabled={isDeleting}
+                className="h-[40px] flex-1 rounded-[10px] border-[0.714px] border-white/10 text-[13px] font-semibold text-[#9A9490]"
+                style={{
+                  fontFamily:
+                    'Inter, sans-serif',
+                }}
+              >
+                취소
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  void handleDelete()
+                }
+                disabled={isDeleting}
+                className="h-[40px] flex-1 rounded-[10px] bg-[#E5695C] text-[13px] font-semibold text-[#0D0A05] disabled:opacity-50"
+                style={{
+                  fontFamily:
+                    'Inter, sans-serif',
+                }}
+              >
+                {isDeleting
+                  ? '지우는 중'
+                  : '삭제'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <VoiceAssistant mode="onboarding" />
     </main>
   );
 };
 
 export default Avatar;
+
+function TrashIcon({
+  className,
+}: {
+  className?: string;
+}) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="M6 6l1 14h10l1-14" />
+      <path d="M10 11v6M14 11v6" />
+    </svg>
+  );
+}
+
+function CheckIcon({
+  className,
+}: {
+  className?: string;
+}) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M4 12.5l5.5 5.5L20 7" />
+    </svg>
+  );
+}
 
 function PersonIcon({
   className,
